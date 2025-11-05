@@ -95,3 +95,9 @@ variable "dns_zone_name" {
   type        = string
   default     = ""
 }
+
+variable "kubernetes_version" {
+  description = "Kubernetes version for AKS cluster (optional, leave empty for latest)"
+  type        = string
+  default     = ""
+}

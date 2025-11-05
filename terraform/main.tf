@@ -73,6 +73,7 @@ module "aks" {
   acr_id              = module.acr.registry_id
   service_principal_client_id     = var.service_principal_client_id
   service_principal_client_secret = var.service_principal_client_secret
+  kubernetes_version  = var.kubernetes_version != "" ? var.kubernetes_version : null
 }
 
 # DNS Zone (if domain is provided)

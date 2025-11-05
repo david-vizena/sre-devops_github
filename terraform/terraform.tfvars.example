@@ -23,10 +23,11 @@ subnet_prefixes = {
 }
 
 # AKS Cluster
-cluster_name = "aks-sre-devops"
-dns_prefix   = "sre-devops"
-node_count   = 2  # Start with 2 nodes to save money (can scale up later)
-vm_size      = "Standard_B2s"  # Cheapest option for testing
+cluster_name      = "aks-sre-devops"
+dns_prefix        = "sre-devops"
+node_count        = 2  # Start with 2 nodes to save money (can scale up later)
+vm_size           = "Standard_B2s"  # Cheapest option for testing
+kubernetes_version = "1.28.0"  # Specify version to speed up terraform plan (leave empty "" for latest, but this will be slower)
 
 # Service Principal (you'll get these after creating it)
 service_principal_client_id     = "YOUR_CLIENT_ID_HERE"
