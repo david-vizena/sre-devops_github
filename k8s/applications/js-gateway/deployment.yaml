@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: js-gateway
+  namespace: default
+  labels:
+    app: js-gateway
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: js-gateway
+  template:
+    metadata:
+      labels:
+        app: js-gateway
+        version: v1
+    spec:
+      containers:
+      - name: js-gateway
+        image: acrsredevops.azurecr.io/js-gateway:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8082
+          name: http
+          protocol: TCP
+        env:
+        - name: PORT
+          value: "8082"
+        - name: SERVICE_NAME
+          value: "js-gateway"
+        - name: GO_SERVICE_URL
+          value: "http://go-service:8080"
+        - name: PYTHON_SERVICE_URL
+          value: "http://python-service:8081"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8082
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8082
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
