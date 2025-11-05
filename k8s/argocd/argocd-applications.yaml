@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: portfolio-applications
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/david-vizena/sre-devops_github.git
+    targetRevision: main
+    path: k8s/applications
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: portfolio-ingress
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/david-vizena/sre-devops_github.git
+    targetRevision: main
+    path: k8s/ingress
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+
