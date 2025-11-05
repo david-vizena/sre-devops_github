@@ -1,6 +1,6 @@
 # Multi-stage build for C++ application
 # Stage 1: Build
-FROM gcc:12-alpine AS builder
+FROM gcc:latest AS builder
 
 WORKDIR /app
 
