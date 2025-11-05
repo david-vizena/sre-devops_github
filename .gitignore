@@ -65,7 +65,7 @@ go.work
 *secret*.yaml
 *secret*.yml
 
-# Access credentials and passwords
+# Access credentials and passwords (keep template, ignore actual)
 ACCESS.md
 *credentials*
 *passwords*
