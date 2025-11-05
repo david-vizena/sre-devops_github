@@ -49,7 +49,7 @@ function App() {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <ServiceCard
             title="Go Service - Transaction Processor"
             description="Processes transactions with pricing, discounts, and tax calculation"
@@ -67,6 +67,24 @@ function App() {
             onError={setError}
             onLoading={setLoading}
           />
+
+          <ServiceCard
+            title="C++ Service - Risk Calculator"
+            description="High-performance risk scoring for transaction analysis"
+            baseUrl={API_BASE_URL}
+            servicePath="/api/v1/cpp"
+            onError={setError}
+            onLoading={setLoading}
+          />
+
+          <ServiceCard
+            title=".NET Service - Inventory Manager"
+            description="Checks inventory availability and stock levels"
+            baseUrl={API_BASE_URL}
+            servicePath="/api/v1/dotnet"
+            onError={setError}
+            onLoading={setLoading}
+          />
         </div>
 
         {loading && (
@@ -78,7 +96,7 @@ function App() {
 
       <footer className="bg-black/20 backdrop-blur-sm text-white py-6 mt-12">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-sm mb-1">Built with React, Express, Go, and Python</p>
+          <p className="text-sm mb-1">Built with React, Express, Go, Python, C++, and .NET</p>
           <p className="text-xs text-white/80">
             Infrastructure: Azure AKS, Terraform, ArgoCD, Prometheus, Grafana, Jaeger
           </p>

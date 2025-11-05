@@ -98,18 +98,75 @@ public:
         int transaction_count = 0;
         
         // Simple JSON parsing (for demo - use proper library in production)
-        size_t amount_pos = body.find("\"amount\":");
-        size_t score_pos = body.find("\"customer_score\":");
-        size_t count_pos = body.find("\"transaction_count\":");
+        // Find and extract values, handling whitespace
+        size_t amount_pos = body.find("\"amount\"");
+        size_t score_pos = body.find("\"customer_score\"");
+        size_t count_pos = body.find("\"transaction_count\"");
         
         if (amount_pos != std::string::npos) {
-            amount = std::stod(body.substr(amount_pos + 9));
+            // Find the colon after "amount"
+            size_t colon = body.find(':', amount_pos);
+            if (colon != std::string::npos) {
+                // Skip whitespace and find the number
+                size_t num_start = colon + 1;
+                while (num_start < body.length() && (body[num_start] == ' ' || body[num_start] == '\t')) {
+                    num_start++;
+                }
+                // Find end of number (comma, space, or closing brace)
+                size_t num_end = num_start;
+                while (num_end < body.length() && 
+                       body[num_end] != ',' && body[num_end] != '}' && 
+                       body[num_end] != ' ' && body[num_end] != '\n' && body[num_end] != '\r') {
+                    num_end++;
+                }
+                try {
+                    amount = std::stod(body.substr(num_start, num_end - num_start));
+                } catch (...) {
+                    amount = 0.0;
+                }
+            }
         }
+        
         if (score_pos != std::string::npos) {
-            customer_score = std::stod(body.substr(score_pos + 16));
+            size_t colon = body.find(':', score_pos);
+            if (colon != std::string::npos) {
+                size_t num_start = colon + 1;
+                while (num_start < body.length() && (body[num_start] == ' ' || body[num_start] == '\t')) {
+                    num_start++;
+                }
+                size_t num_end = num_start;
+                while (num_end < body.length() && 
+                       body[num_end] != ',' && body[num_end] != '}' && 
+                       body[num_end] != ' ' && body[num_end] != '\n' && body[num_end] != '\r') {
+                    num_end++;
+                }
+                try {
+                    customer_score = std::stod(body.substr(num_start, num_end - num_start));
+                } catch (...) {
+                    customer_score = 0.0;
+                }
+            }
         }
+        
         if (count_pos != std::string::npos) {
-            transaction_count = std::stoi(body.substr(count_pos + 20));
+            size_t colon = body.find(':', count_pos);
+            if (colon != std::string::npos) {
+                size_t num_start = colon + 1;
+                while (num_start < body.length() && (body[num_start] == ' ' || body[num_start] == '\t')) {
+                    num_start++;
+                }
+                size_t num_end = num_start;
+                while (num_end < body.length() && 
+                       body[num_end] != ',' && body[num_end] != '}' && 
+                       body[num_end] != ' ' && body[num_end] != '\n' && body[num_end] != '\r') {
+                    num_end++;
+                }
+                try {
+                    transaction_count = std::stoi(body.substr(num_start, num_end - num_start));
+                } catch (...) {
+                    transaction_count = 0;
+                }
+            }
         }
         
         // High-performance risk calculation algorithm
@@ -186,6 +243,12 @@ public:
             if (space1 != std::string::npos && space2 != std::string::npos) {
                 method = request.substr(0, space1);
                 path = request.substr(space1 + 1, space2 - space1 - 1);
+                
+                // Remove query string if present
+                size_t query_pos = path.find('?');
+                if (query_pos != std::string::npos) {
+                    path = path.substr(0, query_pos);
+                }
             }
             
             // Extract body if POST
