@@ -30,8 +30,10 @@ This project implements a full-stack application with:
 
 ### Backend Services
 - **js-gateway**: API gateway handling routing and aggregation
-- **go-service**: Business logic microservice
-- **python-service**: Data processing microservice
+- **go-service**: Transaction processing microservice
+- **python-service**: Analytics and data processing microservice
+- **csharp-risk-service**: Risk calculation microservice
+- **dotnet-service**: Inventory management microservice
 
 ### Observability
 - **Prometheus**: Metrics collection and storage
@@ -65,9 +67,9 @@ Deployment is managed via GitOps using ArgoCD. All infrastructure is provisioned
    az acr login --name acrsredevops
    
    # Build and push each service
-   docker build -t acrsredevops.azurecr.io/go-service:latest applications/go-service/
+   docker build --platform linux/amd64 -t acrsredevops.azurecr.io/go-service:latest applications/go-service/
    docker push acrsredevops.azurecr.io/go-service:latest
-   # Repeat for python-service, js-gateway, react-frontend
+   # Repeat for python-service, csharp-risk-service, dotnet-service, js-gateway, react-frontend
    ```
 
 3. **Deploy to Kubernetes**:
@@ -86,8 +88,9 @@ Deployment is managed via GitOps using ArgoCD. All infrastructure is provisioned
 ### Applications
 - **React 18** - Modern frontend with Tailwind CSS
 - **Node.js/Express** - API Gateway
-- **Go 1.21** - High-performance microservice
-- **Python 3.11** - Data processing microservice
+- **Go 1.21** - Transaction processing microservice
+- **Python 3.11** - Analytics and data processing microservice
+- **C# / .NET 8.0** - Risk calculation and inventory management services
 
 ### Infrastructure & DevOps
 - **Terraform** - Infrastructure as Code
@@ -114,8 +117,10 @@ Deployment is managed via GitOps using ArgoCD. All infrastructure is provisioned
 │       ├── networking/    # VNet and subnets module
 │       └── dns/           # DNS zone module
 ├── applications/          # Microservices source code
-│   ├── go-service/        # Go microservice
-│   ├── python-service/    # Python microservice
+│   ├── go-service/        # Go transaction processing service
+│   ├── python-service/    # Python analytics service
+│   ├── csharp-risk-service/  # C# risk calculation service
+│   ├── dotnet-service/    # .NET inventory management service
 │   ├── js-gateway/        # Express API Gateway
 │   └── react-frontend/    # React application
 ├── k8s/                   # Kubernetes manifests

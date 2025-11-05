@@ -99,22 +99,32 @@ az acr login --name acrsredevops
 ```bash
 # Go Service
 cd ../applications/go-service
-docker build -t acrsredevops.azurecr.io/go-service:latest .
+docker build --platform linux/amd64 -t acrsredevops.azurecr.io/go-service:latest .
 docker push acrsredevops.azurecr.io/go-service:latest
 
 # Python Service
 cd ../python-service
-docker build -t acrsredevops.azurecr.io/python-service:latest .
+docker build --platform linux/amd64 -t acrsredevops.azurecr.io/python-service:latest .
 docker push acrsredevops.azurecr.io/python-service:latest
+
+# C# Risk Service
+cd ../csharp-risk-service
+docker build --platform linux/amd64 -t acrsredevops.azurecr.io/csharp-risk-service:latest .
+docker push acrsredevops.azurecr.io/csharp-risk-service:latest
+
+# .NET Service
+cd ../dotnet-service
+docker build --platform linux/amd64 -t acrsredevops.azurecr.io/dotnet-service:latest .
+docker push acrsredevops.azurecr.io/dotnet-service:latest
 
 # JavaScript Gateway
 cd ../js-gateway
-docker build -t acrsredevops.azurecr.io/js-gateway:latest .
+docker build --platform linux/amd64 -t acrsredevops.azurecr.io/js-gateway:latest .
 docker push acrsredevops.azurecr.io/js-gateway:latest
 
 # React Frontend
 cd ../react-frontend
-docker build -t acrsredevops.azurecr.io/react-frontend:latest .
+docker build --platform linux/amd64 -t acrsredevops.azurecr.io/react-frontend:latest .
 docker push acrsredevops.azurecr.io/react-frontend:latest
 ```
 
@@ -132,6 +142,8 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 # Deploy all services
 kubectl apply -f k8s/applications/go-service/
 kubectl apply -f k8s/applications/python-service/
+kubectl apply -f k8s/applications/csharp-risk-service/
+kubectl apply -f k8s/applications/dotnet-service/
 kubectl apply -f k8s/applications/js-gateway/
 kubectl apply -f k8s/applications/react-frontend/
 

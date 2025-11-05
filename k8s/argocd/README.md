@@ -6,8 +6,10 @@ ArgoCD applications for automated deployment of the portfolio project.
 
 ### portfolio-applications
 Monitors the `k8s/applications` directory and automatically deploys all microservices:
-- Go Service
-- Python Service
+- Go Service (Transaction Processing)
+- Python Service (Analytics)
+- C# Risk Service
+- .NET Service (Inventory Management)
 - JavaScript Gateway
 - React Frontend
 
