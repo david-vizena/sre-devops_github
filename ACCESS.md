@@ -12,7 +12,7 @@
 ### ArgoCD (GitOps)
 - **URL**: http://13.82.12.36 (or https://13.82.12.36)
 - **Username**: `admin`
-- **Password**: `iOxz9kIL769Smubo`
+- **Password**: Get with: `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d`
 
 ### Prometheus (Metrics)
 - **Status**: LoadBalancer IP pending (Azure provisioning)
@@ -23,7 +23,7 @@
 - **Status**: LoadBalancer IP pending (Azure provisioning)
 - **Port-forward**: `kubectl port-forward svc/grafana -n monitoring 3000:3000`
 - **Local Access**: http://localhost:3000
-- **Default Login**: `admin` / `admin`
+- **Default Login**: Get password with: `kubectl get secret grafana-admin -n monitoring -o jsonpath="{.data.admin-password}" | base64 -d`
 
 ### Jaeger (Distributed Tracing)
 - **Status**: LoadBalancer IP pending (Azure provisioning)

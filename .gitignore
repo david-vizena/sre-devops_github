@@ -65,6 +65,11 @@ go.work
 *secret*.yaml
 *secret*.yml
 
+# Access credentials and passwords
+ACCESS.md
+*credentials*
+*passwords*
+
 # Docker
 .dockerignore
 
