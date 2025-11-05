@@ -133,25 +133,72 @@ app.post('/api/v1/python/*', async (req, res) => {
 });
 
 /**
- * Direct endpoints that call microservices
+ * Transaction processing endpoint - Go service
  */
-app.get('/api/v1/process', async (req, res) => {
+app.post('/api/v1/process-transaction', async (req, res) => {
   try {
-    const response = await axios.post(`${GO_SERVICE_URL}/api/v1/process`);
+    const response = await axios.post(`${GO_SERVICE_URL}/api/v1/process-transaction`, req.body);
+    
+    // Optionally send transaction to analytics service
+    try {
+      await axios.post(`${PYTHON_SERVICE_URL}/api/v1/store-transaction`, response.data);
+    } catch (analyticsError) {
+      console.error('Failed to store transaction for analytics:', analyticsError.message);
+      // Don't fail the transaction if analytics fails
+    }
+    
     res.json(response.data);
   } catch (error) {
-    console.error('Process endpoint error:', error.message);
-    res.status(500).json({ error: 'Failed to process request' });
+    console.error('Transaction processing error:', error.message);
+    res.status(error.response?.status || 500).json({ 
+      error: 'Failed to process transaction',
+      message: error.message 
+    });
   }
 });
 
-app.post('/api/v1/transform', async (req, res) => {
+/**
+ * Analytics endpoint - Python service
+ */
+app.get('/api/v1/analyze', async (req, res) => {
   try {
-    const response = await axios.post(`${PYTHON_SERVICE_URL}/api/v1/transform`, req.body);
+    const response = await axios.get(`${PYTHON_SERVICE_URL}/api/v1/analyze`);
     res.json(response.data);
   } catch (error) {
-    console.error('Transform endpoint error:', error.message);
-    res.status(500).json({ error: 'Failed to transform data' });
+    console.error('Analytics error:', error.message);
+    res.status(error.response?.status || 500).json({ 
+      error: 'Failed to analyze transactions',
+      message: error.message 
+    });
+  }
+});
+
+app.post('/api/v1/analyze', async (req, res) => {
+  try {
+    const response = await axios.post(`${PYTHON_SERVICE_URL}/api/v1/analyze`, req.body);
+    res.json(response.data);
+  } catch (error) {
+    console.error('Analytics error:', error.message);
+    res.status(error.response?.status || 500).json({ 
+      error: 'Failed to analyze transactions',
+      message: error.message 
+    });
+  }
+});
+
+/**
+ * Generate report - Python service
+ */
+app.get('/api/v1/report', async (req, res) => {
+  try {
+    const response = await axios.get(`${PYTHON_SERVICE_URL}/api/v1/report`);
+    res.json(response.data);
+  } catch (error) {
+    console.error('Report generation error:', error.message);
+    res.status(error.response?.status || 500).json({ 
+      error: 'Failed to generate report',
+      message: error.message 
+    });
   }
 });
 
