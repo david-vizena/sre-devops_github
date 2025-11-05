@@ -49,12 +49,95 @@ This project implements a full-stack application with:
 
 Deployment is managed via GitOps using ArgoCD. All infrastructure is provisioned using Terraform.
 
+### Quick Start
+
+1. **Provision Infrastructure**:
+   ```bash
+   cd terraform
+   terraform init
+   terraform plan
+   terraform apply
+   ```
+
+2. **Build and Push Docker Images**:
+   ```bash
+   # Login to ACR
+   az acr login --name acrsredevops
+   
+   # Build and push each service
+   docker build -t acrsredevops.azurecr.io/go-service:latest applications/go-service/
+   docker push acrsredevops.azurecr.io/go-service:latest
+   # Repeat for python-service, js-gateway, react-frontend
+   ```
+
+3. **Deploy to Kubernetes**:
+   ```bash
+   kubectl apply -f k8s/applications/
+   kubectl apply -f k8s/ingress/
+   ```
+
+4. **Set up ArgoCD** (for GitOps):
+   ```bash
+   kubectl apply -f k8s/argocd/argocd-applications.yaml
+   ```
+
+## Technology Stack
+
+### Applications
+- **React 18** - Modern frontend with Tailwind CSS
+- **Node.js/Express** - API Gateway
+- **Go 1.21** - High-performance microservice
+- **Python 3.11** - Data processing microservice
+
+### Infrastructure & DevOps
+- **Terraform** - Infrastructure as Code
+- **Azure AKS** - Kubernetes orchestration
+- **Azure Container Registry** - Docker image storage
+- **ArgoCD** - GitOps continuous deployment
+- **NGINX Ingress** - Load balancing and routing
+
+### Observability
+- **Prometheus** - Metrics collection
+- **Grafana** - Dashboards and visualization
+- **Jaeger** - Distributed tracing
+
 ## Directory Structure
 
 ```
 ├── terraform/              # Infrastructure as Code
-├── applications/           # Microservices source code
+│   ├── main.tf            # Main Terraform configuration
+│   ├── variables.tf       # Variable definitions
+│   ├── outputs.tf         # Output values
+│   └── modules/           # Reusable Terraform modules
+│       ├── aks/           # AKS cluster module
+│       ├── container-registry/  # ACR module
+│       ├── networking/    # VNet and subnets module
+│       └── dns/           # DNS zone module
+├── applications/          # Microservices source code
+│   ├── go-service/        # Go microservice
+│   ├── python-service/    # Python microservice
+│   ├── js-gateway/        # Express API Gateway
+│   └── react-frontend/    # React application
 ├── k8s/                   # Kubernetes manifests
-├── monitoring/             # SLO definitions and dashboards
-└── docs/                  # Documentation
+│   ├── applications/      # Service deployments
+│   ├── ingress/          # Ingress configuration
+│   ├── argocd/           # ArgoCD applications
+│   ├── prometheus/       # Prometheus configuration
+│   ├── grafana/         # Grafana dashboards
+│   └── jaeger/          # Jaeger tracing config
+├── monitoring/           # SLO definitions and dashboards
+└── docs/                # Documentation
 ```
+
+## Features
+
+- ✅ Multi-language microservices architecture
+- ✅ Containerized applications with Docker
+- ✅ Kubernetes orchestration
+- ✅ GitOps with ArgoCD
+- ✅ Infrastructure as Code with Terraform
+- ✅ Observability stack (Prometheus, Grafana, Jaeger)
+- ✅ Health checks and resource limits
+- ✅ Modern UI with Tailwind CSS
+- ✅ API Gateway pattern
+- ✅ Service discovery and load balancing
