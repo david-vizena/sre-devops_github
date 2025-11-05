@@ -1,0 +1,37 @@
+# Copy this file to terraform.tfvars and fill in your values
+# DO NOT commit terraform.tfvars to git (it's in .gitignore)
+
+# Resource Group
+resource_group_name = "rg-sre-devops-portfolio"
+location            = "eastus"  # Azure region (eastus is usually cheapest)
+
+# Container Registry
+acr_name = "acrsredevops"  # Must be globally unique, lowercase alphanumeric, 5-50 chars
+                            # Change this to something unique!
+
+# Virtual Network
+vnet_name           = "vnet-sre-devops"
+vnet_address_space  = ["10.0.0.0/16"]
+
+# Subnets
+subnet_names = {
+  aks = "subnet-aks"
+}
+
+subnet_prefixes = {
+  aks = "10.0.1.0/24"
+}
+
+# AKS Cluster
+cluster_name = "aks-sre-devops"
+dns_prefix   = "sre-devops"
+node_count   = 2  # Start with 2 nodes to save money (can scale up later)
+vm_size      = "Standard_B2s"  # Cheapest option for testing
+
+# Service Principal (you'll get these after creating it)
+service_principal_client_id     = "YOUR_CLIENT_ID_HERE"
+service_principal_client_secret = "YOUR_CLIENT_SECRET_HERE"
+
+# DNS (optional - leave empty "" if you don't have a domain yet)
+dns_zone_name = ""
+
