@@ -17,6 +17,8 @@ spec:
         app: js-gateway
         version: v1
     spec:
+      imagePullSecrets:
+      - name: acr-secret
       containers:
       - name: js-gateway
         image: acrsredevops.azurecr.io/js-gateway:latest

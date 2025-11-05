@@ -17,6 +17,8 @@ spec:
         app: python-service
         version: v1
     spec:
+      imagePullSecrets:
+      - name: acr-secret
       containers:
       - name: python-service
         image: acrsredevops.azurecr.io/python-service:latest

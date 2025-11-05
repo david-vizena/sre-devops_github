@@ -17,6 +17,8 @@ spec:
         app: dotnet-service
         version: v1
     spec:
+      imagePullSecrets:
+      - name: acr-secret
       containers:
       - name: dotnet-service
         image: acrsredevops.azurecr.io/dotnet-service:latest

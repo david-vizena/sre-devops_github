@@ -17,6 +17,8 @@ spec:
         app: go-service
         version: v1
     spec:
+      imagePullSecrets:
+      - name: acr-secret
       containers:
       - name: go-service
         image: acrsredevops.azurecr.io/go-service:latest

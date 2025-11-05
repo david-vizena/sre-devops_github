@@ -17,6 +17,8 @@ spec:
         app: cpp-service
         version: v1
     spec:
+      imagePullSecrets:
+      - name: acr-secret
       containers:
       - name: cpp-service
         image: acrsredevops.azurecr.io/cpp-service:latest
