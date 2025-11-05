@@ -1,0 +1,3 @@
+# Python dependencies for the data processing service
+# Currently using standard library only, but this file is here for future dependencies
+
