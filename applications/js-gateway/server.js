@@ -14,6 +14,8 @@ const SERVICE_NAME = process.env.SERVICE_NAME || 'js-gateway';
 // Service URLs - In Kubernetes, these will be service names
 const GO_SERVICE_URL = process.env.GO_SERVICE_URL || 'http://localhost:8080';
 const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL || 'http://localhost:8081';
+const CPP_SERVICE_URL = process.env.CPP_SERVICE_URL || 'http://localhost:8083';
+const DOTNET_SERVICE_URL = process.env.DOTNET_SERVICE_URL || 'http://localhost:8084';
 
 // Middleware
 app.use(cors());
@@ -35,7 +37,9 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     upstream_services: {
       go_service: GO_SERVICE_URL,
-      python_service: PYTHON_SERVICE_URL
+      python_service: PYTHON_SERVICE_URL,
+      cpp_service: CPP_SERVICE_URL,
+      dotnet_service: DOTNET_SERVICE_URL
     }
   });
 });
@@ -46,10 +50,12 @@ app.get('/health', (req, res) => {
  */
 app.get('/api/v1/aggregate', async (req, res) => {
   try {
-    // Make parallel requests to both services
-    const [goResponse, pythonResponse] = await Promise.allSettled([
+    // Make parallel requests to all services
+    const [goResponse, pythonResponse, cppResponse, dotnetResponse] = await Promise.allSettled([
       axios.get(`${GO_SERVICE_URL}/api/v1/stats`),
-      axios.get(`${PYTHON_SERVICE_URL}/api/v1/metrics`)
+      axios.get(`${PYTHON_SERVICE_URL}/api/v1/metrics`),
+      axios.get(`${CPP_SERVICE_URL}/api/v1/stats`),
+      axios.get(`${DOTNET_SERVICE_URL}/api/v1/stats`)
     ]);
 
     const aggregated = {
@@ -60,6 +66,12 @@ app.get('/api/v1/aggregate', async (req, res) => {
         : { error: 'Service unavailable' },
       python_service: pythonResponse.status === 'fulfilled'
         ? pythonResponse.value.data
+        : { error: 'Service unavailable' },
+      cpp_service: cppResponse.status === 'fulfilled'
+        ? cppResponse.value.data
+        : { error: 'Service unavailable' },
+      dotnet_service: dotnetResponse.status === 'fulfilled'
+        ? dotnetResponse.value.data
         : { error: 'Service unavailable' }
     };
 
@@ -203,6 +215,100 @@ app.get('/api/v1/report', async (req, res) => {
 });
 
 /**
+ * Risk calculation endpoint - C++ service
+ */
+app.post('/api/v1/calculate-risk', async (req, res) => {
+  try {
+    const response = await axios.post(`${CPP_SERVICE_URL}/api/v1/calculate`, req.body);
+    res.json(response.data);
+  } catch (error) {
+    console.error('Risk calculation error:', error.message);
+    res.status(error.response?.status || 500).json({ 
+      error: 'Failed to calculate risk',
+      message: error.message 
+    });
+  }
+});
+
+/**
+ * Proxy to C++ service
+ */
+app.get('/api/v1/cpp/*', async (req, res) => {
+  try {
+    const path = req.path.replace('/api/v1/cpp', '');
+    const response = await axios.get(`${CPP_SERVICE_URL}${path}`);
+    res.json(response.data);
+  } catch (error) {
+    console.error('C++ service proxy error:', error.message);
+    res.status(error.response?.status || 500).json({
+      error: 'C++ service unavailable',
+      message: error.message
+    });
+  }
+});
+
+app.post('/api/v1/cpp/*', async (req, res) => {
+  try {
+    const path = req.path.replace('/api/v1/cpp', '');
+    const response = await axios.post(`${CPP_SERVICE_URL}${path}`, req.body);
+    res.json(response.data);
+  } catch (error) {
+    console.error('C++ service proxy error:', error.message);
+    res.status(error.response?.status || 500).json({
+      error: 'C++ service unavailable',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * Inventory check endpoint - .NET service
+ */
+app.post('/api/v1/inventory/check', async (req, res) => {
+  try {
+    const response = await axios.post(`${DOTNET_SERVICE_URL}/api/v1/inventory/check`, req.body);
+    res.json(response.data);
+  } catch (error) {
+    console.error('Inventory check error:', error.message);
+    res.status(error.response?.status || 500).json({ 
+      error: 'Failed to check inventory',
+      message: error.message 
+    });
+  }
+});
+
+/**
+ * Proxy to .NET service
+ */
+app.get('/api/v1/dotnet/*', async (req, res) => {
+  try {
+    const path = req.path.replace('/api/v1/dotnet', '');
+    const response = await axios.get(`${DOTNET_SERVICE_URL}${path}`);
+    res.json(response.data);
+  } catch (error) {
+    console.error('.NET service proxy error:', error.message);
+    res.status(error.response?.status || 500).json({
+      error: '.NET service unavailable',
+      message: error.message
+    });
+  }
+});
+
+app.post('/api/v1/dotnet/*', async (req, res) => {
+  try {
+    const path = req.path.replace('/api/v1/dotnet', '');
+    const response = await axios.post(`${DOTNET_SERVICE_URL}${path}`, req.body);
+    res.json(response.data);
+  } catch (error) {
+    console.error('.NET service proxy error:', error.message);
+    res.status(error.response?.status || 500).json({
+      error: '.NET service unavailable',
+      message: error.message
+    });
+  }
+});
+
+/**
  * 404 handler
  */
 app.use((req, res) => {
@@ -224,6 +330,8 @@ const server = app.listen(PORT, () => {
   console.log(`${SERVICE_NAME} listening on port ${PORT}`);
   console.log(`Go service URL: ${GO_SERVICE_URL}`);
   console.log(`Python service URL: ${PYTHON_SERVICE_URL}`);
+  console.log(`C++ service URL: ${CPP_SERVICE_URL}`);
+  console.log(`.NET service URL: ${DOTNET_SERVICE_URL}`);
 });
 
 process.on('SIGTERM', () => {
