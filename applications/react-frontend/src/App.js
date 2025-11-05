@@ -3,7 +3,8 @@ import ServiceCard from './components/ServiceCard';
 import TransactionProcessor from './components/TransactionProcessor';
 import AnalyticsView from './components/AnalyticsView';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8082';
+// Use relative URL for production, or environment variable if set
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 function App() {
   const [loading, setLoading] = useState(false);
