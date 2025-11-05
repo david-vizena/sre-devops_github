@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import './ServiceCard.css';
 
 function ServiceCard({ title, description, baseUrl, servicePath, onError, onLoading }) {
   const [healthStatus, setHealthStatus] = useState(null);
@@ -60,22 +59,28 @@ function ServiceCard({ title, description, baseUrl, servicePath, onError, onLoad
   };
 
   return (
-    <div className="service-card">
-      <div className="card-header">
-        <h2>{title}</h2>
-        <p className="card-description">{description}</p>
+    <div className="bg-white rounded-xl shadow-2xl p-6 hover:shadow-3xl transition-all duration-300 hover:-translate-y-1">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">{title}</h2>
+        <p className="text-gray-600 text-sm">{description}</p>
       </div>
 
-      <div className="card-actions">
-        <button onClick={checkHealth} className="btn btn-primary">
+      <div className="space-y-3 mb-6">
+        <button 
+          onClick={checkHealth} 
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+        >
           Check Health
         </button>
-        <button onClick={getStats} className="btn btn-secondary">
+        <button 
+          onClick={getStats} 
+          className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+        >
           Get Stats
         </button>
         <button 
           onClick={processData} 
-          className="btn btn-action"
+          className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={processing}
         >
           {processing ? 'Processing...' : 'Process Data'}
@@ -83,16 +88,20 @@ function ServiceCard({ title, description, baseUrl, servicePath, onError, onLoad
       </div>
 
       {healthStatus && (
-        <div className="card-result">
-          <h3>Health Status</h3>
-          <pre>{JSON.stringify(healthStatus, null, 2)}</pre>
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">Health Status</h3>
+          <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-xs font-mono">
+            {JSON.stringify(healthStatus, null, 2)}
+          </pre>
         </div>
       )}
 
       {stats && (
-        <div className="card-result">
-          <h3>Service Data</h3>
-          <pre>{JSON.stringify(stats, null, 2)}</pre>
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">Service Data</h3>
+          <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-xs font-mono">
+            {JSON.stringify(stats, null, 2)}
+          </pre>
         </div>
       )}
     </div>
