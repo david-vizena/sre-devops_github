@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ServiceCard from './components/ServiceCard';
-import AggregateView from './components/AggregateView';
+import TransactionProcessor from './components/TransactionProcessor';
+import AnalyticsView from './components/AnalyticsView';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8082';
 
@@ -16,7 +17,7 @@ function App() {
             SRE/DevOps Portfolio Project
           </h1>
           <p className="text-lg md:text-xl text-white/90">
-            Microservices Architecture Demonstration
+            Transaction Processing & Analytics System
           </p>
         </div>
       </header>
@@ -34,10 +35,24 @@ function App() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <TransactionProcessor
+            baseUrl={API_BASE_URL}
+            onError={setError}
+            onLoading={setLoading}
+          />
+
+          <AnalyticsView
+            baseUrl={API_BASE_URL}
+            onError={setError}
+            onLoading={setLoading}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <ServiceCard
-            title="Go Microservice"
-            description="High-performance business logic service"
+            title="Go Service - Transaction Processor"
+            description="Processes transactions with pricing, discounts, and tax calculation"
             baseUrl={API_BASE_URL}
             servicePath="/api/v1/go"
             onError={setError}
@@ -45,16 +60,10 @@ function App() {
           />
 
           <ServiceCard
-            title="Python Microservice"
-            description="Data processing and transformation service"
+            title="Python Service - Analytics Engine"
+            description="Analyzes transaction data and generates business insights"
             baseUrl={API_BASE_URL}
             servicePath="/api/v1/python"
-            onError={setError}
-            onLoading={setLoading}
-          />
-
-          <AggregateView
-            baseUrl={API_BASE_URL}
             onError={setError}
             onLoading={setLoading}
           />

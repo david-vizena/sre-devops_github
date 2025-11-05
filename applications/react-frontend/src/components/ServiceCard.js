@@ -41,17 +41,17 @@ function ServiceCard({ title, description, baseUrl, servicePath, onError, onLoad
     setProcessing(true);
     onLoading(true);
     try {
-      const endpoint = title.includes('Go')
-        ? `${baseUrl}${servicePath}/api/v1/process`
-        : `${baseUrl}${servicePath}/api/v1/transform`;
-      
-      const method = title.includes('Go') ? 'post' : 'post';
-      const response = await axios[method](endpoint, { test: 'data' });
-      
-      setStats(response.data);
+      // For Go service, show stats. For Python, show analytics
+      if (title.includes('Go')) {
+        const response = await axios.get(`${baseUrl}${servicePath}/api/v1/stats`);
+        setStats(response.data);
+      } else {
+        const response = await axios.get(`${baseUrl}${servicePath}/api/v1/metrics`);
+        setStats(response.data);
+      }
       onError(null);
     } catch (error) {
-      onError(`Failed to process with ${title}: ${error.message}`);
+      onError(`Failed to get ${title} data: ${error.message}`);
     } finally {
       setProcessing(false);
       onLoading(false);
@@ -83,7 +83,7 @@ function ServiceCard({ title, description, baseUrl, servicePath, onError, onLoad
           className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={processing}
         >
-          {processing ? 'Processing...' : 'Process Data'}
+          {processing ? 'Loading...' : 'Get Service Stats'}
         </button>
       </div>
 
