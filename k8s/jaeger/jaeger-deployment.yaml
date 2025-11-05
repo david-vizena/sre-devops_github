@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jaeger
+  template:
+    metadata:
+      labels:
+        app: jaeger
+    spec:
+      containers:
+      - name: jaeger
+        image: jaegertracing/all-in-one:latest
+        ports:
+        - containerPort: 16686
+          name: query-http
+        - containerPort: 14268
+          name: collector-http
+        - containerPort: 14250
+          name: collector-grpc
+        env:
+        - name: COLLECTOR_ZIPKIN_HTTP_PORT
+          value: "9411"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger-query
+  namespace: monitoring
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 16686
+    targetPort: 16686
+    name: query-http
+  - port: 14268
+    targetPort: 14268
+    name: collector-http
+  - port: 14250
+    targetPort: 14250
+    name: collector-grpc
+  selector:
+    app: jaeger
+
