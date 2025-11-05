@@ -1,49 +1,41 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: js-gateway
+  name: csharp-risk-service
   namespace: default
   labels:
-    app: js-gateway
+    app: csharp-risk-service
     version: v1
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: js-gateway
+      app: csharp-risk-service
   template:
     metadata:
       labels:
-        app: js-gateway
+        app: csharp-risk-service
         version: v1
     spec:
       imagePullSecrets:
       - name: acr-secret
       containers:
-      - name: js-gateway
-        image: acrsredevops.azurecr.io/js-gateway:latest
+      - name: csharp-risk-service
+        image: acrsredevops.azurecr.io/csharp-risk-service:latest
         imagePullPolicy: Always
         ports:
-        - containerPort: 8082
+        - containerPort: 8083
           name: http
           protocol: TCP
         env:
         - name: PORT
-          value: "8082"
-        - name: SERVICE_NAME
-          value: "js-gateway"
-        - name: GO_SERVICE_URL
-          value: "http://go-service:8080"
-        - name: PYTHON_SERVICE_URL
-          value: "http://python-service:8081"
-        - name: CSHARP_RISK_SERVICE_URL
-          value: "http://csharp-risk-service:8083"
-        - name: DOTNET_SERVICE_URL
-          value: "http://dotnet-service:8084"
+          value: "8083"
+        - name: ENVIRONMENT
+          value: "production"
         livenessProbe:
           httpGet:
             path: /health
-            port: 8082
+            port: 8083
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
@@ -51,7 +43,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /health
-            port: 8082
+            port: 8083
           initialDelaySeconds: 10
           periodSeconds: 5
           timeoutSeconds: 3

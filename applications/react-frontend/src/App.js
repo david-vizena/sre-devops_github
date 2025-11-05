@@ -70,10 +70,10 @@ function App() {
           />
 
           <ServiceCard
-            title="C++ Service - Risk Calculator"
+            title="C# Risk Service - Risk Calculator"
             description="High-performance risk scoring for transaction analysis"
             baseUrl={API_BASE_URL}
-            servicePath="/api/v1/cpp"
+            servicePath="/api/v1/csharp-risk"
             onError={setError}
             onLoading={setLoading}
           />
@@ -97,7 +97,7 @@ function App() {
 
       <footer className="bg-black/20 backdrop-blur-sm text-white py-6 mt-12">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-sm mb-1">Built with React, Express, Go, Python, C++, and .NET</p>
+          <p className="text-sm mb-1">Built with React, Express, Go, Python, C#, and .NET</p>
           <p className="text-xs text-white/80">
             Infrastructure: Azure AKS, Terraform, ArgoCD, Prometheus, Grafana, Jaeger
           </p>
