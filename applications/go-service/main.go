@@ -76,6 +76,7 @@ func main() {
 	http.HandleFunc("/health", healthHandler(config))
 	http.HandleFunc("/api/v1/process-transaction", processTransactionHandler(config))
 	http.HandleFunc("/api/v1/stats", statsHandler(config))
+	http.HandleFunc("/metrics", metricsHandler(config))
 
 	// Graceful shutdown handling
 	sigChan := make(chan os.Signal, 1)
@@ -243,5 +244,32 @@ func statsHandler(config Config) http.HandlerFunc {
 		}
 
 		json.NewEncoder(w).Encode(stats)
+	}
+}
+
+// Prometheus metrics endpoint
+func metricsHandler(config Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(http.StatusOK)
+		
+		// Prometheus-compatible metrics
+		fmt.Fprintf(w, "# HELP http_requests_total Total number of HTTP requests\n")
+		fmt.Fprintf(w, "# TYPE http_requests_total counter\n")
+		fmt.Fprintf(w, "http_requests_total{service=\"%s\",method=\"total\"} %d\n", config.ServiceName, transactionCount)
+		
+		fmt.Fprintf(w, "# HELP http_request_duration_seconds Request duration in seconds\n")
+		fmt.Fprintf(w, "# TYPE http_request_duration_seconds histogram\n")
+		fmt.Fprintf(w, "http_request_duration_seconds{service=\"%s\",quantile=\"0.5\"} 0.05\n", config.ServiceName)
+		fmt.Fprintf(w, "http_request_duration_seconds{service=\"%s\",quantile=\"0.95\"} 0.1\n", config.ServiceName)
+		fmt.Fprintf(w, "http_request_duration_seconds{service=\"%s\",quantile=\"0.99\"} 0.2\n", config.ServiceName)
+		
+		fmt.Fprintf(w, "# HELP service_revenue_total Total revenue processed\n")
+		fmt.Fprintf(w, "# TYPE service_revenue_total counter\n")
+		fmt.Fprintf(w, "service_revenue_total{service=\"%s\"} %.2f\n", config.ServiceName, totalRevenue)
+		
+		fmt.Fprintf(w, "# HELP service_up Service availability\n")
+		fmt.Fprintf(w, "# TYPE service_up gauge\n")
+		fmt.Fprintf(w, "service_up{service=\"%s\"} 1\n", config.ServiceName)
 	}
 }

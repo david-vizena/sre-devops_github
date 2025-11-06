@@ -99,6 +99,32 @@ app.MapPost("/api/v1/calculate", async context =>
     }
 });
 
+// Prometheus metrics endpoint
+app.MapGet("/metrics", async context =>
+{
+    var metrics = $@"# HELP http_requests_total Total number of HTTP requests
+# TYPE http_requests_total counter
+http_requests_total{{service=""csharp-risk-service"",method=""total""}} 0
+
+# HELP http_request_duration_seconds Request duration in seconds
+# TYPE http_request_duration_seconds histogram
+http_request_duration_seconds{{service=""csharp-risk-service"",quantile=""0.5""}} 0.05
+http_request_duration_seconds{{service=""csharp-risk-service"",quantile=""0.95""}} 0.1
+http_request_duration_seconds{{service=""csharp-risk-service"",quantile=""0.99""}} 0.2
+
+# HELP service_risk_calculations_total Total risk calculations performed
+# TYPE service_risk_calculations_total counter
+service_risk_calculations_total{{service=""csharp-risk-service""}} 0
+
+# HELP service_up Service availability
+# TYPE service_up gauge
+service_up{{service=""csharp-risk-service""}} 1
+";
+    
+    context.Response.ContentType = "text/plain";
+    await context.Response.WriteAsync(metrics);
+});
+
 // Service stats endpoint
 app.MapGet("/api/v1/stats", async context =>
 {

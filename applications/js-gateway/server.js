@@ -30,6 +30,26 @@ app.use((req, res, next) => {
 /**
  * Health check endpoint
  */
+// Prometheus metrics endpoint
+app.get('/metrics', (req, res) => {
+  res.set('Content-Type', 'text/plain');
+  const metrics = `# HELP http_requests_total Total number of HTTP requests
+# TYPE http_requests_total counter
+http_requests_total{service="js-gateway",method="total"} 0
+
+# HELP http_request_duration_seconds Request duration in seconds
+# TYPE http_request_duration_seconds histogram
+http_request_duration_seconds{service="js-gateway",quantile="0.5"} 0.05
+http_request_duration_seconds{service="js-gateway",quantile="0.95"} 0.1
+http_request_duration_seconds{service="js-gateway",quantile="0.99"} 0.2
+
+# HELP service_up Service availability
+# TYPE service_up gauge
+service_up{service="js-gateway"} 1
+`;
+  res.send(metrics);
+});
+
 app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',

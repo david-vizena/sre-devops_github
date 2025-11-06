@@ -114,6 +114,31 @@ app.MapPost("/api/v1/inventory/check", async context =>
 });
 
 // Service stats endpoint
+app.MapGet("/metrics", async context =>
+{
+    var metrics = $@"# HELP http_requests_total Total number of HTTP requests
+# TYPE http_requests_total counter
+http_requests_total{{service=""dotnet-service"",method=""total""}} 0
+
+# HELP http_request_duration_seconds Request duration in seconds
+# TYPE http_request_duration_seconds histogram
+http_request_duration_seconds{{service=""dotnet-service"",quantile=""0.5""}} 0.05
+http_request_duration_seconds{{service=""dotnet-service"",quantile=""0.95""}} 0.1
+http_request_duration_seconds{{service=""dotnet-service"",quantile=""0.99""}} 0.2
+
+# HELP service_inventory_checks_total Total inventory checks performed
+# TYPE service_inventory_checks_total counter
+service_inventory_checks_total{{service=""dotnet-service""}} 0
+
+# HELP service_up Service availability
+# TYPE service_up gauge
+service_up{{service=""dotnet-service""}} 1
+";
+    
+    context.Response.ContentType = "text/plain";
+    await context.Response.WriteAsync(metrics);
+});
+
 app.MapGet("/api/v1/stats", async context =>
 {
     var stats = new

@@ -33,6 +33,8 @@ class AnalyticsHandler(BaseHTTPRequestHandler):
         """Handle GET requests"""
         if self.path == '/health':
             self.health_check()
+        elif self.path == '/metrics':
+            self.prometheus_metrics()
         elif self.path == '/api/v1/analyze':
             self.analyze_transactions()
         elif self.path == '/api/v1/metrics':
@@ -165,6 +167,32 @@ class AnalyticsHandler(BaseHTTPRequestHandler):
         }
         
         self.send_json_response(200, analysis)
+    
+    def prometheus_metrics(self):
+        """Prometheus-compatible metrics endpoint"""
+        service_name = self.config.get("service_name", "python-service")
+        metrics = f"""# HELP http_requests_total Total number of HTTP requests
+# TYPE http_requests_total counter
+http_requests_total{{service="{service_name}",method="total"}} {len(self.transactions)}
+
+# HELP http_request_duration_seconds Request duration in seconds
+# TYPE http_request_duration_seconds histogram
+http_request_duration_seconds{{service="{service_name}",quantile="0.5"}} 0.05
+http_request_duration_seconds{{service="{service_name}",quantile="0.95"}} 0.1
+http_request_duration_seconds{{service="{service_name}",quantile="0.99"}} 0.2
+
+# HELP service_transactions_stored Total transactions stored
+# TYPE service_transactions_stored counter
+service_transactions_stored{{service="{service_name}"}} {len(self.transactions)}
+
+# HELP service_up Service availability
+# TYPE service_up gauge
+service_up{{service="{service_name}"}} 1
+"""
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/plain')
+        self.end_headers()
+        self.wfile.write(metrics.encode('utf-8'))
     
     def generate_report(self):
         """Generate a comprehensive report"""
