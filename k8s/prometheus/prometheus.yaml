@@ -84,14 +84,16 @@ data:
         - source_labels: [__meta_kubernetes_service_name]
           action: keep
           regex: (go-service|python-service|csharp-risk-service|dotnet-service|js-gateway)
+        - source_labels: [__meta_kubernetes_endpoint_port_name]
+          action: keep
+          regex: http
         - source_labels: [__meta_kubernetes_endpoint_address_target_name]
           action: replace
           target_label: instance
         - source_labels: [__address__]
-          action: replace
           target_label: __address__
-          regex: (.+)
-          replacement: ${1}/metrics
+        - target_label: __metrics_path__
+          replacement: /metrics
         - action: labelmap
           regex: __meta_kubernetes_service_label_(.+)
         - source_labels: [__meta_kubernetes_namespace]
