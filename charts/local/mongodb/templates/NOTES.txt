@@ -1,0 +1,10 @@
+1. Get the MongoDB root password:
+   MONGODB_PASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ include "mongodb.fullname" . }} -o jsonpath="{.data.mongodb-root-password}" | base64 -d)
+
+2. Connect inside the cluster:
+   kubectl run --namespace {{ .Release.Namespace }} mongodb-client --rm -i --tty --image mongo:{{ .Values.image.tag }} --restart=Never -- bash
+     > mongosh "mongodb://{{ include "mongodb.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}" -u {{ .Values.auth.username }} -p "$MONGODB_PASSWORD"
+
+3. Forward the service locally (optional):
+   kubectl port-forward svc/{{ include "mongodb.fullname" . }} --namespace {{ .Release.Namespace }} 27017:{{ .Values.service.port }}
+

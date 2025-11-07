@@ -1,0 +1,37 @@
+image:
+  repository: mongo
+  tag: 7.0.12
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 27017
+
+auth:
+  enabled: true
+  username: root
+  passwordLength: 20
+
+persistence:
+  enabled: true
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  size: 10Gi
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+podAnnotations: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+

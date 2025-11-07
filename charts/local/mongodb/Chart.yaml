@@ -1,0 +1,7 @@
+apiVersion: v2
+name: mongodb
+description: Minimal MongoDB chart for the data-services namespace
+type: application
+version: 0.1.0
+appVersion: "7.0.12"
+
