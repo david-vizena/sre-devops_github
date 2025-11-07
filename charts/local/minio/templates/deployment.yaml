@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "minio.fullname" . }}
+  labels:
+    {{- include "minio.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "minio.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "minio.name" . }}
+        {{- include "minio.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: minio
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/sh","-c"]
+          args:
+            - >-
+              MINIO_ROOT_USER=$(cat /credentials/accesskey) MINIO_ROOT_PASSWORD=$(cat /credentials/secretkey)
+              exec minio server /data --console-address :{{ .Values.service.consolePort }}
+          ports:
+            - containerPort: {{ .Values.service.apiPort }}
+              name: minio-api
+            - containerPort: {{ .Values.service.consolePort }}
+              name: minio-console
+          env:
+            - name: MINIO_BROWSER_REDIRECT_URL
+              value: ""
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: credentials
+              mountPath: /credentials
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /minio/health/ready
+              port: minio-api
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: minio-api
+            initialDelaySeconds: 20
+            periodSeconds: 20
+      volumes:
+        - name: credentials
+          secret:
+            secretName: {{ include "minio.fullname" . }}
+        - name: data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "minio.fullname" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}

@@ -1,0 +1,8 @@
+1. Retrieve credentials:
+   ACCESS_KEY=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ include "minio.fullname" . }} -o jsonpath="{.data.accesskey}" | base64 -d)
+   SECRET_KEY=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ include "minio.fullname" . }} -o jsonpath="{.data.secretkey}" | base64 -d)
+
+2. Port-forward to access MinIO console locally:
+   kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "minio.fullname" . }} 9000:{{ .Values.service.apiPort }} 9001:{{ .Values.service.consolePort }}
+
+3. Open http://localhost:9001 and log in with the credentials above.

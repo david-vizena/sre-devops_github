@@ -1,0 +1,5 @@
+apiVersion: v2
+name: minio
+version: 0.1.0
+appVersion: "RELEASE.2024-10-02T17-50-41Z"
+description: Minimal MinIO chart using the official minio/minio image

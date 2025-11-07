@@ -1,0 +1,16 @@
+image:
+  repository: docker.io/minio/minio
+  tag: RELEASE.2024-10-02T17-50-41Z
+  pullPolicy: IfNotPresent
+
+service:
+  apiPort: 9000
+  consolePort: 9001
+
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: ""
+
+accessKeyLength: 16
+secretKeyLength: 24
