@@ -1,0 +1,8 @@
+1. Get the Redis password:
+   REDIS_PASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ include "redis.fullname" . }} -o jsonpath="{.data.password}" | base64 -d)
+
+2. Connect to your Redis deployment:
+   kubectl run --namespace {{ .Release.Namespace }} redis-client --rm -it \
+     --env REDIS_PASSWORD=$REDIS_PASSWORD \
+     --image {{ .Values.image.repository }}:{{ .Values.image.tag }} -- \
+     redis-cli -h {{ include "redis.fullname" . }} -a "$REDIS_PASSWORD"
