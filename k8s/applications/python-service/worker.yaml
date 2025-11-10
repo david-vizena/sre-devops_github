@@ -43,6 +43,63 @@ spec:
                 secretKeyRef:
                   name: rabbitmq-rabbitmq
                   key: rabbitmq-password
+        - name: POSTGRES_HOST
+          value: "postgresql-postgresql.data-services.svc.cluster.local"
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgresql-postgresql
+              key: app-database
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgresql-postgresql
+              key: app-username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgresql-postgresql
+              key: app-password
+        - name: POSTGRES_SSLMODE
+          value: "disable"
+        - name: MONGODB_HOST
+          value: "mongodb-mongodb.data-services.svc.cluster.local"
+        - name: MONGODB_PORT
+          value: "27017"
+        - name: MONGODB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-mongodb
+              key: mongodb-root-username
+        - name: MONGODB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-mongodb
+              key: mongodb-root-password
+        - name: MONGODB_AUTH_SOURCE
+          value: "admin"
+        - name: MONGODB_DATABASE
+          value: "analytics"
+        - name: MONGODB_COLLECTION
+          value: "transactions_summary"
+        - name: MINIO_ENDPOINT
+          value: "minio-minio.data-services.svc.cluster.local:9000"
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: minio-minio
+              key: accesskey
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: minio-minio
+              key: secretkey
+        - name: MINIO_BUCKET
+          value: "analytics-reports"
+        - name: MINIO_SECURE
+          value: "false"
           resources:
             requests:
               cpu: "100m"

@@ -1,2 +1,5 @@
-# Core HTTP service remains stdlib-only; workers pull in RabbitMQ client
+# Core HTTP service remains stdlib-only; workers pull in dependencies
 pika==1.3.2
+psycopg[binary]==3.1.18
+pymongo==4.6.3
+minio==7.2.9
