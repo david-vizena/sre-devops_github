@@ -9,11 +9,97 @@ const cors = require('cors');
 
 const cache = require('./lib/cache');
 const messageBus = require('./lib/messageBus');
+const database = require('./lib/database');
 
 const app = express();
 const PORT = process.env.PORT || 8082;
 const SERVICE_NAME = process.env.SERVICE_NAME || 'js-gateway';
 const AGGREGATE_CACHE_TTL = parseInt(process.env.AGGREGATE_CACHE_TTL || '60', 10);
+const TRANSACTION_CACHE_TTL = parseInt(process.env.TRANSACTION_CACHE_TTL || '120', 10);
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isValidUuid(value) {
+  return UUID_REGEX.test(value);
+}
+
+function toNumber(value) {
+  if (value === null || value === undefined) return null;
+  const num = typeof value === 'number' ? value : parseFloat(value);
+  return Number.isNaN(num) ? null : num;
+}
+
+function toIso(value) {
+  if (!value) return null;
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+async function fetchTransactionFromPostgres(id) {
+  const mainResult = await database.query(
+    `SELECT id,
+            customer_id,
+            subtotal,
+            tax,
+            discount,
+            total,
+            currency,
+            created_at,
+            processed_at
+     FROM transactions
+     WHERE id = $1`,
+    [id],
+  );
+
+  if (mainResult.rowCount === 0) {
+    return null;
+  }
+
+  const transaction = mainResult.rows[0];
+
+  const itemsResult = await database.query(
+    `SELECT product_id,
+            name,
+            category,
+            unit_price,
+            quantity
+     FROM transaction_items
+     WHERE transaction_id = $1`,
+    [id],
+  );
+
+  const items = itemsResult.rows.map((item) => {
+    const unitPrice = toNumber(item.unit_price) || 0;
+    const quantity = Number(item.quantity) || 0;
+    return {
+      productId: item.product_id,
+      name: item.name,
+      category: item.category,
+      unitPrice,
+      quantity,
+      lineTotal: parseFloat((unitPrice * quantity).toFixed(2)),
+    };
+  });
+
+  return {
+    source: 'postgresql',
+    transactionId: transaction.id,
+    customerId: transaction.customer_id,
+    currency: transaction.currency,
+    createdAt: toIso(transaction.created_at),
+    processedAt: toIso(transaction.processed_at),
+    totals: {
+      subtotal: toNumber(transaction.subtotal),
+      tax: toNumber(transaction.tax),
+      discount: toNumber(transaction.discount),
+      total: toNumber(transaction.total),
+      items: items.reduce((acc, item) => acc + item.quantity, 0),
+    },
+    items,
+  };
+}
 
 // Service URLs - In Kubernetes, these will be service names
 const GO_SERVICE_URL = process.env.GO_SERVICE_URL || 'http://localhost:8080';
@@ -54,17 +140,27 @@ service_up{service="js-gateway"} 1
   res.send(metrics);
 });
 
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
+  let databaseStatus = 'unknown';
+  try {
+    await database.query('SELECT 1');
+    databaseStatus = 'up';
+  } catch (error) {
+    console.error('Postgres health check failed:', error.message);
+    databaseStatus = 'down';
+  }
+
   res.json({
-    status: 'healthy',
+    status: databaseStatus === 'up' ? 'healthy' : 'degraded',
     service: SERVICE_NAME,
     timestamp: new Date().toISOString(),
+    database: databaseStatus,
     upstream_services: {
       go_service: GO_SERVICE_URL,
       python_service: PYTHON_SERVICE_URL,
       csharp_risk_service: CSHARP_RISK_SERVICE_URL,
-      dotnet_service: DOTNET_SERVICE_URL
-    }
+      dotnet_service: DOTNET_SERVICE_URL,
+    },
   });
 });
 
@@ -141,6 +237,36 @@ app.post('/api/v1/go/*', async (req, res) => {
 });
 
 /**
+ * Transaction lookup endpoint (PostgreSQL + Redis cache)
+ */
+app.get('/api/v1/transactions/:id', async (req, res) => {
+  const { id } = req.params;
+  if (!isValidUuid(id)) {
+    return res.status(400).json({ error: 'Invalid transaction ID format' });
+  }
+
+  const cacheKey = `transaction:${id}`;
+
+  try {
+    const { data, cacheHit } = await cache.wrap(cacheKey, async () => {
+      const record = await fetchTransactionFromPostgres(id);
+      return record;
+    }, TRANSACTION_CACHE_TTL);
+
+    res.set('X-Cache', cacheHit ? 'HIT' : 'MISS');
+
+    if (!data) {
+      return res.status(404).json({ error: 'Transaction not found', transactionId: id });
+    }
+
+    return res.json(data);
+  } catch (error) {
+    console.error('Transaction lookup error:', error);
+    return res.status(500).json({ error: 'Failed to fetch transaction' });
+  }
+});
+
+/**
  * Proxy to Python service
  */
 app.get('/api/v1/python/*', async (req, res) => {
@@ -196,6 +322,12 @@ app.post('/api/v1/process-transaction', async (req, res) => {
       });
     } catch (publishError) {
       console.error('Failed to publish transaction event:', publishError.message);
+    }
+
+    if (response.data?.transactionId) {
+      cache.del(`transaction:${response.data.transactionId}`).catch((err) => {
+        console.warn('Failed to invalidate transaction cache:', err.message);
+      });
     }
 
     res.json(response.data);
@@ -375,6 +507,9 @@ const server = app.listen(PORT, () => {
   // Warm up Redis/RabbitMQ connections (non-blocking)
   cache.ensureConnected().catch((err) => console.error('Redis connection failed:', err.message));
   messageBus.ensureChannel().catch((err) => console.error('RabbitMQ connection failed:', err.message));
+  database.ensureConnection()
+    .then(() => console.log('PostgreSQL connection ready'))
+    .catch((err) => console.error('PostgreSQL connection failed:', err.message));
 });
 
 let shuttingDown = false;
@@ -387,6 +522,7 @@ function gracefulShutdown(signal) {
   Promise.allSettled([
     cache.close(),
     messageBus.close(),
+    database.closePool(),
   ])
     .catch((err) => console.error('Error during shutdown:', err))
     .finally(() => {
