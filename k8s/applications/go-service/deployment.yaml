@@ -34,6 +34,29 @@ spec:
           value: "go-service"
         - name: ENVIRONMENT
           value: "production"
+        - name: POSTGRES_HOST
+          value: "postgresql-postgresql.data-services.svc.cluster.local"
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgresql-postgresql
+              key: app-database
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgresql-postgresql
+              key: app-username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgresql-postgresql
+              key: app-password
+        - name: POSTGRES_SSLMODE
+          value: "disable"
+        - name: POSTGRES_MAX_CONNS
+          value: "4"
         livenessProbe:
           httpGet:
             path: /health
