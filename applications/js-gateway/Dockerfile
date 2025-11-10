@@ -15,11 +15,13 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy dependencies from builder
+# Copy dependencies and package metadata from builder
+COPY package.json ./
 COPY --from=builder /app/node_modules ./node_modules
 
 # Copy application code
 COPY server.js .
+COPY lib ./lib
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \

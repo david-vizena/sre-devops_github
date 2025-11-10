@@ -40,6 +40,37 @@ spec:
           value: "http://csharp-risk-service:8083"
         - name: DOTNET_SERVICE_URL
           value: "http://dotnet-service:8084"
+        - name: REDIS_HOST
+          value: "redis-redis"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: AGGREGATE_CACHE_TTL
+          value: "60"
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-redis
+              key: password
+        - name: RABBITMQ_HOST
+          value: "rabbitmq-rabbitmq"
+        - name: RABBITMQ_PORT
+          value: "5672"
+        - name: RABBITMQ_QUEUE
+          value: "analytics.events"
+        - name: RABBITMQ_EXCHANGE
+          value: "analytics"
+        - name: RABBITMQ_ROUTING_KEY
+          value: "analytics.events"
+        - name: RABBITMQ_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-rabbitmq
+              key: rabbitmq-username
+        - name: RABBITMQ_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-rabbitmq
+              key: rabbitmq-password
         livenessProbe:
           httpGet:
             path: /health

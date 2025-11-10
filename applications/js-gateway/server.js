@@ -7,9 +7,13 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 
+const cache = require('./lib/cache');
+const messageBus = require('./lib/messageBus');
+
 const app = express();
 const PORT = process.env.PORT || 8082;
 const SERVICE_NAME = process.env.SERVICE_NAME || 'js-gateway';
+const AGGREGATE_CACHE_TTL = parseInt(process.env.AGGREGATE_CACHE_TTL || '60', 10);
 
 // Service URLs - In Kubernetes, these will be service names
 const GO_SERVICE_URL = process.env.GO_SERVICE_URL || 'http://localhost:8080';
@@ -70,32 +74,35 @@ app.get('/health', (req, res) => {
  */
 app.get('/api/v1/aggregate', async (req, res) => {
   try {
-    // Make parallel requests to all services
-    const [goResponse, pythonResponse, csharpRiskResponse, dotnetResponse] = await Promise.allSettled([
-      axios.get(`${GO_SERVICE_URL}/api/v1/stats`),
-      axios.get(`${PYTHON_SERVICE_URL}/api/v1/metrics`),
-      axios.get(`${CSHARP_RISK_SERVICE_URL}/api/v1/stats`),
-      axios.get(`${DOTNET_SERVICE_URL}/api/v1/stats`)
-    ]);
+    const cacheKey = 'aggregate:v1';
+    const { data, cacheHit } = await cache.wrap(cacheKey, async () => {
+      const [goResponse, pythonResponse, csharpRiskResponse, dotnetResponse] = await Promise.allSettled([
+        axios.get(`${GO_SERVICE_URL}/api/v1/stats`),
+        axios.get(`${PYTHON_SERVICE_URL}/api/v1/metrics`),
+        axios.get(`${CSHARP_RISK_SERVICE_URL}/api/v1/stats`),
+        axios.get(`${DOTNET_SERVICE_URL}/api/v1/stats`)
+      ]);
 
-    const aggregated = {
-      service: SERVICE_NAME,
-      timestamp: new Date().toISOString(),
-      go_service: goResponse.status === 'fulfilled' 
-        ? goResponse.value.data 
-        : { error: 'Service unavailable' },
-      python_service: pythonResponse.status === 'fulfilled'
-        ? pythonResponse.value.data
-        : { error: 'Service unavailable' },
-      csharp_risk_service: csharpRiskResponse.status === 'fulfilled'
-        ? csharpRiskResponse.value.data
-        : { error: 'Service unavailable' },
-      dotnet_service: dotnetResponse.status === 'fulfilled'
-        ? dotnetResponse.value.data
-        : { error: 'Service unavailable' }
-    };
+      return {
+        service: SERVICE_NAME,
+        timestamp: new Date().toISOString(),
+        go_service: goResponse.status === 'fulfilled'
+          ? goResponse.value.data
+          : { error: 'Service unavailable' },
+        python_service: pythonResponse.status === 'fulfilled'
+          ? pythonResponse.value.data
+          : { error: 'Service unavailable' },
+        csharp_risk_service: csharpRiskResponse.status === 'fulfilled'
+          ? csharpRiskResponse.value.data
+          : { error: 'Service unavailable' },
+        dotnet_service: dotnetResponse.status === 'fulfilled'
+          ? dotnetResponse.value.data
+          : { error: 'Service unavailable' }
+      };
+    }, AGGREGATE_CACHE_TTL);
 
-    res.json(aggregated);
+    res.set('X-Cache', cacheHit ? 'HIT' : 'MISS');
+    res.json(data);
   } catch (error) {
     console.error('Aggregation error:', error);
     res.status(500).json({ error: 'Failed to aggregate services' });
@@ -170,7 +177,7 @@ app.post('/api/v1/python/*', async (req, res) => {
 app.post('/api/v1/process-transaction', async (req, res) => {
   try {
     const response = await axios.post(`${GO_SERVICE_URL}/api/v1/process-transaction`, req.body);
-    
+
     // Optionally send transaction to analytics service
     try {
       await axios.post(`${PYTHON_SERVICE_URL}/api/v1/store-transaction`, response.data);
@@ -178,7 +185,19 @@ app.post('/api/v1/process-transaction', async (req, res) => {
       console.error('Failed to store transaction for analytics:', analyticsError.message);
       // Don't fail the transaction if analytics fails
     }
-    
+
+    // Publish event for asynchronous processing
+    try {
+      await messageBus.publish('transaction.processed', {
+        transactionId: response.data?.transactionId || response.data?.transaction_id,
+        amount: response.data?.total || 0,
+        currency: response.data?.currency || 'USD',
+        raw: response.data,
+      });
+    } catch (publishError) {
+      console.error('Failed to publish transaction event:', publishError.message);
+    }
+
     res.json(response.data);
   } catch (error) {
     console.error('Transaction processing error:', error.message);
@@ -352,21 +371,32 @@ const server = app.listen(PORT, () => {
   console.log(`Python service URL: ${PYTHON_SERVICE_URL}`);
   console.log(`C# Risk service URL: ${CSHARP_RISK_SERVICE_URL}`);
   console.log(`.NET service URL: ${DOTNET_SERVICE_URL}`);
+
+  // Warm up Redis/RabbitMQ connections (non-blocking)
+  cache.ensureConnected().catch((err) => console.error('Redis connection failed:', err.message));
+  messageBus.ensureChannel().catch((err) => console.error('RabbitMQ connection failed:', err.message));
 });
 
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully...');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
-});
+let shuttingDown = false;
 
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully...');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
-});
+function gracefulShutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+
+  console.log(`${signal} received, shutting down gracefully...`);
+  Promise.allSettled([
+    cache.close(),
+    messageBus.close(),
+  ])
+    .catch((err) => console.error('Error during shutdown:', err))
+    .finally(() => {
+      server.close(() => {
+        console.log('Server closed');
+        process.exit(0);
+      });
+    });
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 

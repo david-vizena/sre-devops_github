@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-service-worker
+  namespace: default
+  labels:
+    app: python-service-worker
+    component: analytics-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: python-service-worker
+  template:
+    metadata:
+      labels:
+        app: python-service-worker
+        component: analytics-worker
+    spec:
+      imagePullSecrets:
+        - name: acr-secret
+      containers:
+        - name: python-service-worker
+          image: acrsredevops.azurecr.io/python-service:latest
+          imagePullPolicy: Always
+          command: ["python", "worker.py"]
+          env:
+            - name: RABBITMQ_HOST
+              value: "rabbitmq-rabbitmq"
+            - name: RABBITMQ_PORT
+              value: "5672"
+            - name: RABBITMQ_QUEUE
+              value: "analytics.events"
+            - name: RABBITMQ_PREFETCH
+              value: "5"
+            - name: RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-rabbitmq
+                  key: rabbitmq-username
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-rabbitmq
+                  key: rabbitmq-password
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
