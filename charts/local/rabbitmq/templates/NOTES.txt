@@ -1,0 +1,14 @@
+1. Retrieve the RabbitMQ credentials:
+   RABBITMQ_PASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ include "rabbitmq.fullname" . }} -o jsonpath="{.data.rabbitmq-password}" | base64 -d)
+   RABBITMQ_USERNAME=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ include "rabbitmq.fullname" . }} -o jsonpath="{.data.rabbitmq-username}" | base64 -d)
+
+2. Access the management UI (if enabled):
+   kubectl port-forward svc/{{ include "rabbitmq.fullname" . }} --namespace {{ .Release.Namespace }} 15672:{{ .Values.service.managementPort }}
+   Username: $RABBITMQ_USERNAME
+   Password: $RABBITMQ_PASSWORD
+
+3. Connect via AMQP:
+   kubectl run --namespace {{ .Release.Namespace }} rabbitmq-client --rm -i --tty --image bitnami/rabbitmq:3.13.5 --restart=Never -- bash
+     > rabbitmq-diagnostics ping
+     > rabbitmqadmin --username="$RABBITMQ_USERNAME" --password="$RABBITMQ_PASSWORD" list queues
+

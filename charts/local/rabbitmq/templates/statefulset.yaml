@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "rabbitmq.fullname" . }}
+  labels:
+    {{- include "rabbitmq.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "rabbitmq.fullname" . }}
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "rabbitmq.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "rabbitmq.selectorLabels" . | nindent 8 }}
+      {{- if .Values.podAnnotations }}
+      annotations:
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
+      {{- end }}
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: rabbitmq
+          image: {{ include "rabbitmq.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: amqp
+              containerPort: 5672
+            {{- if .Values.service.managementEnabled }}
+            - name: management
+              containerPort: 15672
+            {{- end }}
+          env:
+            - name: RABBITMQ_DEFAULT_USER_FILE
+              value: /opt/bitnami/rabbitmq/secrets/username
+            - name: RABBITMQ_DEFAULT_PASS_FILE
+              value: /opt/bitnami/rabbitmq/secrets/password
+            - name: RABBITMQ_ERLANG_COOKIE_FILE
+              value: /opt/bitnami/rabbitmq/secrets/erlang-cookie
+            - name: RABBITMQ_PLUGINS
+              value: "rabbitmq_management"
+            {{- range .Values.extraEnv }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+            {{- end }}
+          livenessProbe:
+            exec:
+              command:
+                - bash
+                - -ec
+                - rabbitmq-diagnostics -q ping
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            exec:
+              command:
+                - bash
+                - -ec
+                - rabbitmq-diagnostics -q ping
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/rabbitmq
+            - name: rabbitmq-secret
+              mountPath: /opt/bitnami/rabbitmq/secrets
+              readOnly: true
+      volumes:
+        - name: rabbitmq-secret
+          secret:
+            secretName: {{ include "rabbitmq.fullname" . }}
+            items:
+              - key: rabbitmq-username
+                path: username
+              - key: rabbitmq-password
+                path: password
+              - key: rabbitmq-erlang-cookie
+                path: erlang-cookie
+        {{- if not .Values.persistence.enabled }}
+        - name: data
+          emptyDir: {}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if .Values.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          {{- range .Values.persistence.accessModes }}
+          - {{ . }}
+          {{- end }}
+        {{- if .Values.persistence.storageClassName }}
+        storageClassName: {{ .Values.persistence.storageClassName }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}
+  {{- end }}
+
