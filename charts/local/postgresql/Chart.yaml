@@ -1,0 +1,7 @@
+apiVersion: v2
+name: postgresql
+description: Lightweight PostgreSQL chart for transactional workloads (ACID source of truth)
+type: application
+version: 0.1.0
+appVersion: "16.3"
+

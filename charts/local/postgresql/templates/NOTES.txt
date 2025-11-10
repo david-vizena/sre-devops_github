@@ -1,0 +1,17 @@
+1. Forward the PostgreSQL service locally:
+   kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "postgresql.fullname" . }} 5432:{{ .Values.service.port }}
+
+2. Retrieve credentials:
+   POSTGRES_PASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ include "postgresql.fullname" . }} -o jsonpath="{.data.postgres-password}" | base64 -d)
+   APP_USER=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ include "postgresql.fullname" . }} -o jsonpath="{.data.app-username}" | base64 -d)
+   APP_PASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ include "postgresql.fullname" . }} -o jsonpath="{.data.app-password}" | base64 -d)
+   APP_DATABASE=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ include "postgresql.fullname" . }} -o jsonpath="{.data.app-database}" | base64 -d)
+
+3. Connect using psql:
+   PGPASSWORD=$APP_PASSWORD psql "host=localhost port=5432 dbname=$APP_DATABASE user=$APP_USER sslmode=disable"
+
+4. Admin access:
+   PGPASSWORD=$POSTGRES_PASSWORD psql "host=localhost port=5432 dbname=postgres user=postgres sslmode=disable"
+
+The chart stores credentials only in Kubernetes Secrets. Rotate by upgrading the release with different lengths or overriding values.
+
