@@ -1,0 +1,191 @@
+{
+  "id": null,
+  "uid": "analytics-pipeline",
+  "title": "Analytics Pipeline",
+  "tags": [
+    "analytics",
+    "portfolio"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "refresh": 1,
+        "current": {
+          "selected": true,
+          "text": "Prometheus",
+          "value": "Prometheus"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Transactions Submitted",
+      "datasource": "$datasource",
+      "description": "Rate of transactions entering the system via the API gateway.",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "req/s",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{path=\"/api/v1/process-transaction\"}[$__rate_interval]))",
+          "legendFormat": "Process transaction"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Gateway Cache Hit Ratio",
+      "datasource": "$datasource",
+      "description": "Effectiveness of Redis caching for transaction lookups.",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(redis_keyspace_hits_total[$__rate_interval])) / clamp_min(sum(rate(redis_keyspace_hits_total[$__rate_interval]) + rate(redis_keyspace_misses_total[$__rate_interval])), 1)",
+          "legendFormat": "Cache hit ratio"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "RabbitMQ Queue Depth",
+      "datasource": "$datasource",
+      "description": "Outstanding analytics events waiting to be processed.",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "max(rabbitmq_queue_messages_ready{queue=\"analytics.events\"})",
+          "legendFormat": "Messages ready"
+        },
+        {
+          "expr": "max(rabbitmq_queue_messages_unacknowledged{queue=\"analytics.events\"})",
+          "legendFormat": "Unacked"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Worker Throughput",
+      "datasource": "$datasource",
+      "description": "Messages acknowledged by the analytics worker.",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "msg/s",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(rabbitmq_queue_messages_acked_total{queue=\"analytics.events\"}[$__rate_interval]))",
+          "legendFormat": "Acked"
+        },
+        {
+          "expr": "sum(rate(rabbitmq_queue_messages_published_total{queue=\"analytics.events\"}[$__rate_interval]))",
+          "legendFormat": "Published"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Worker Restarts (1h)",
+      "datasource": "$datasource",
+      "description": "Container restarts for the analytics worker in the last hour.",
+      "gridPos": { "x": 0, "y": 16, "w": 6, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 3 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"default\", pod=~\"python-service-worker.*\"}[1h]))",
+          "legendFormat": "Restarts"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "table",
+      "title": "Recent Analytics Output",
+      "datasource": "$datasource",
+      "description": "Latest analytics document timestamps as observed in MongoDB sync metrics.",
+      "gridPos": { "x": 6, "y": 16, "w": 18, "h": 4 },
+      "targets": [
+        {
+          "expr": "topk(5, max by (transaction_id) (mongodb_collection_last_update_timestamp_seconds{collection=\"transactions_summary\"}))",
+          "legendFormat": "{{transaction_id}}"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "Value": "Last Update (s)",
+              "transaction_id": "Transaction ID"
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true
+      }
+    }
+  ]
+}
+
