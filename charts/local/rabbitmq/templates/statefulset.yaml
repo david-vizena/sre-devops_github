@@ -32,12 +32,21 @@ spec:
               containerPort: 15672
             {{- end }}
           env:
-            - name: RABBITMQ_DEFAULT_USER_FILE
-              value: /opt/bitnami/rabbitmq/secrets/username
-            - name: RABBITMQ_DEFAULT_PASS_FILE
-              value: /opt/bitnami/rabbitmq/secrets/password
-            - name: RABBITMQ_ERLANG_COOKIE_FILE
-              value: /opt/bitnami/rabbitmq/secrets/erlang-cookie
+            - name: RABBITMQ_DEFAULT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rabbitmq.fullname" . }}
+                  key: rabbitmq-username
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rabbitmq.fullname" . }}
+                  key: rabbitmq-password
+            - name: RABBITMQ_ERLANG_COOKIE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rabbitmq.fullname" . }}
+                  key: rabbitmq-erlang-cookie
             - name: RABBITMQ_PLUGINS
               value: "rabbitmq_management"
             {{- range .Values.extraEnv }}
@@ -65,20 +74,7 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /var/lib/rabbitmq
-            - name: rabbitmq-secret
-              mountPath: /opt/bitnami/rabbitmq/secrets
-              readOnly: true
       volumes:
-        - name: rabbitmq-secret
-          secret:
-            secretName: {{ include "rabbitmq.fullname" . }}
-            items:
-              - key: rabbitmq-username
-                path: username
-              - key: rabbitmq-password
-                path: password
-              - key: rabbitmq-erlang-cookie
-                path: erlang-cookie
         {{- if not .Values.persistence.enabled }}
         - name: data
           emptyDir: {}
