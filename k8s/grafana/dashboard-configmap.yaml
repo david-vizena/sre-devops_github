@@ -11,7 +11,10 @@ data:
       "id": null,
       "uid": "portfolio-overview",
       "title": "Portfolio Overview",
-      "tags": ["portfolio", "operations"],
+      "tags": [
+        "portfolio",
+        "operations"
+      ],
       "timezone": "browser",
       "schemaVersion": 38,
       "version": 1,
@@ -227,7 +230,10 @@ data:
       "id": null,
       "uid": "analytics-pipeline",
       "title": "Analytics Pipeline",
-      "tags": ["analytics", "portfolio"],
+      "tags": [
+        "analytics",
+        "portfolio"
+      ],
       "timezone": "browser",
       "schemaVersion": 38,
       "version": 1,
