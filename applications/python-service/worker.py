@@ -176,13 +176,20 @@ class RabbitWorker:
         self._channel.start_consuming()
 
     def process_message(self, payload: Dict[str, Any]) -> None:
+        event_payload: Dict[str, Any] = payload
+        if isinstance(payload, dict) and "payload" in payload:
+            inner = payload.get("payload")
+            if isinstance(inner, dict):
+                event_payload = inner
+
         transaction_id = (
-            payload.get("transactionId")
-            or payload.get("transaction_id")
-            or payload.get("transactionID")
+            event_payload.get("transactionId")
+            or event_payload.get("transaction_id")
+            or event_payload.get("transactionID")
         )
         if not transaction_id:
-            print("[worker] Transaction ID missing, skipping")
+            event_type = payload.get("eventType") if isinstance(payload, dict) else None
+            print(f"[worker] Transaction ID missing, skipping (eventType={event_type})")
             return
 
         try:
@@ -292,7 +299,7 @@ class RabbitWorker:
             raise RuntimeError(f"Failed to upload report to MinIO: {exc}") from exc
 
     def _persist_analytics(self, transaction_id: str, analytics: Dict[str, Any], object_key: str) -> None:
-        if not self.mongo_collection:
+        if self.mongo_collection is None:
             raise RuntimeError("MongoDB collection not initialised")
 
         document = {
@@ -305,12 +312,14 @@ class RabbitWorker:
             "last_updated": datetime.utcnow(),
         }
 
-        self.mongo_collection.update_one(
+        result = self.mongo_collection.update_one(
             {"transaction_id": transaction_id},
             {"$set": document},
             upsert=True,
         )
-        print(f"[worker] Stored analytics for transaction {transaction_id}")
+        matched = result.matched_count if result else 0
+        action = "updated" if matched else "inserted"
+        print(f"[worker] Stored analytics for transaction {transaction_id} ({action})")
 
     def close(self) -> None:
         if self._channel and self._channel.is_open:

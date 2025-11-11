@@ -1,6 +1,6 @@
 const amqp = require('amqplib');
 
-const RABBITMQ_HOST = process.env.RABBITMQ_HOST || 'rabbitmq-rabbitmq';
+const RABBITMQ_HOST = process.env.RABBITMQ_HOST || 'rabbitmq-rabbitmq.data-services.svc.cluster.local';
 const RABBITMQ_PORT = parseInt(process.env.RABBITMQ_PORT || '5672', 10);
 const RABBITMQ_USERNAME = process.env.RABBITMQ_USERNAME || 'guest';
 const RABBITMQ_PASSWORD = process.env.RABBITMQ_PASSWORD || 'guest';

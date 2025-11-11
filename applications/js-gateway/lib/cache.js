@@ -1,6 +1,6 @@
 const { createClient } = require('redis');
 
-const REDIS_HOST = process.env.REDIS_HOST || 'redis-redis';
+const REDIS_HOST = process.env.REDIS_HOST || 'redis-redis.data-services.svc.cluster.local';
 const REDIS_PORT = parseInt(process.env.REDIS_PORT || '6379', 10);
 const REDIS_PASSWORD = process.env.REDIS_PASSWORD;
 const REDIS_URL = process.env.REDIS_URL || `redis://${REDIS_PASSWORD ? `:${encodeURIComponent(REDIS_PASSWORD)}@` : ''}${REDIS_HOST}:${REDIS_PORT}`;

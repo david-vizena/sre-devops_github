@@ -25,6 +25,8 @@ spec:
           imagePullPolicy: Always
           command: ["python", "worker.py"]
           env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
             - name: RABBITMQ_HOST
               value: "rabbitmq-rabbitmq.data-services.svc.cluster.local"
             - name: RABBITMQ_PORT
