@@ -20,14 +20,6 @@ spec:
             name: prometheus
             port:
               number: 9090
-      # Grafana - rewrite /grafana to /
-      - path: /grafana(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: grafana
-            port:
-              number: 3000
       # Jaeger - rewrite /jaeger to /
       - path: /jaeger(/|$)(.*)
         pathType: ImplementationSpecific
