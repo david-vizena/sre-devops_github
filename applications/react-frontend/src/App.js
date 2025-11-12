@@ -9,6 +9,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [latestTransactionId, setLatestTransactionId] = useState(null);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600">
@@ -41,12 +42,14 @@ function App() {
             baseUrl={API_BASE_URL}
             onError={setError}
             onLoading={setLoading}
+            onTransactionProcessed={setLatestTransactionId}
           />
 
           <AnalyticsView
             baseUrl={API_BASE_URL}
             onError={setError}
             onLoading={setLoading}
+            latestTransactionId={latestTransactionId}
           />
         </div>
 

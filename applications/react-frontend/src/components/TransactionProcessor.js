@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-function TransactionProcessor({ baseUrl, onError, onLoading }) {
+function TransactionProcessor({ baseUrl, onError, onLoading, onTransactionProcessed }) {
   const [transaction, setTransaction] = useState({
     customer_id: '',
     items: [{ id: '1', name: '', price: '', quantity: 1, category: 'electronics' }],
@@ -55,6 +55,11 @@ function TransactionProcessor({ baseUrl, onError, onLoading }) {
       const response = await axios.post(`${baseUrl}/api/v1/process-transaction`, payload);
       setResult(response.data);
       onError(null);
+      // Notify parent component about the new transaction
+      // Go service returns transaction_id in snake_case
+      if (onTransactionProcessed && response.data.transaction_id) {
+        onTransactionProcessed(response.data.transaction_id);
+      }
     } catch (error) {
       onError(`Failed to process transaction: ${error.response?.data?.message || error.message}`);
     } finally {

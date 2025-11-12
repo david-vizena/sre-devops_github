@@ -29,105 +29,27 @@
           "text": "Prometheus",
           "value": "Prometheus"
         }
-      },
-      {
-        "name": "service",
-        "type": "query",
-        "datasource": "$datasource",
-        "definition": "label_values(http_requests_total, service)",
-        "includeAll": true,
-        "multi": true,
-        "refresh": 2,
-        "sort": 3,
-        "current": {
-          "selected": true,
-          "text": "All",
-          "value": "$__all"
-        }
       }
     ]
   },
   "panels": [
     {
-      "type": "timeseries",
-      "title": "Request Rate by Service",
-      "description": "Inbound HTTP request rate across services.",
-      "datasource": "$datasource",
-      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "req/s",
-          "min": 0
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "expr": "sum by (service) (rate(http_requests_total{service=~\"$service\"}[$__rate_interval]))",
-          "legendFormat": "{{service}}"
-        }
-      ]
-    },
-    {
-      "type": "timeseries",
-      "title": "Error Rate (5xx)",
-      "description": "Server-side error rate. Tracks 5xx responses as a share of traffic.",
-      "datasource": "$datasource",
-      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "req/s",
-          "min": 0
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "expr": "sum by (service) (rate(http_requests_total{status=~\"5..\", service=~\"$service\"}[$__rate_interval]))",
-          "legendFormat": "{{service}}"
-        }
-      ],
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "right"
-        }
-      }
-    },
-    {
-      "type": "timeseries",
-      "title": "Latency p95",
-      "description": "95th percentile latency calculated from Prometheus histograms.",
-      "datasource": "$datasource",
-      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "min": 0
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "expr": "histogram_quantile(0.95, sum by (service, le) (rate(http_request_duration_seconds_bucket{service=~\"$service\"}[$__rate_interval])))",
-          "legendFormat": "{{service}}"
-        }
-      ]
-    },
-    {
       "type": "stat",
-      "title": "Transactions (last hour)",
-      "description": "Number of transactions processed in the last hour.",
+      "title": "Total Transactions",
+      "description": "Total number of transactions processed by go-service",
       "datasource": "$datasource",
-      "gridPos": { "x": 12, "y": 8, "w": 6, "h": 4 },
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1 }
+              { "color": "green", "value": null }
             ]
           }
         },
@@ -135,8 +57,10 @@
       },
       "targets": [
         {
-          "expr": "sum(increase(http_requests_total{path=\"/api/v1/process-transaction\"}[1h]))",
-          "legendFormat": "Transactions"
+          "expr": "http_requests_total{service=\"go-service\"}",
+          "legendFormat": "Transactions",
+          "instant": false,
+          "refId": "A"
         }
       ],
       "options": {
@@ -153,21 +77,21 @@
     },
     {
       "type": "stat",
-      "title": "Cache Hit Ratio (Redis)",
-      "description": "Ratio of Redis cache hits to total lookups.",
+      "title": "Total Revenue",
+      "description": "Total revenue processed",
       "datasource": "$datasource",
-      "gridPos": { "x": 18, "y": 8, "w": 6, "h": 4 },
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit",
+          "unit": "currencyUSD",
           "min": 0,
-          "max": 1,
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
-            "mode": "percentage",
+            "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "orange", "value": 0.5 },
-              { "color": "green", "value": 0.8 }
+              { "color": "green", "value": null }
             ]
           }
         },
@@ -175,11 +99,17 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(redis_keyspace_hits_total[$__rate_interval])) / clamp_min(sum(rate(redis_keyspace_hits_total[$__rate_interval]) + rate(redis_keyspace_misses_total[$__rate_interval])), 1)",
-          "legendFormat": "Hit ratio"
+          "expr": "service_revenue_total{service=\"go-service\"}",
+          "legendFormat": "Revenue",
+          "instant": false,
+          "refId": "A"
         }
       ],
       "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
         "reduceOptions": {
           "calcs": ["lastNotNull"],
           "fields": "",
@@ -188,25 +118,262 @@
       }
     },
     {
-      "type": "table",
-      "title": "Top Routes (5m)",
-      "description": "Most active API routes by request volume over the last 5 minutes.",
+      "type": "stat",
+      "title": "Services Running",
+      "description": "Number of services currently running",
       "datasource": "$datasource",
-      "gridPos": { "x": 0, "y": 16, "w": 24, "h": 6 },
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "green", "value": 2 }
+            ]
+          }
+        },
+        "overrides": []
+      },
       "targets": [
         {
-          "expr": "topk(10, sum by (path, method) (rate(http_requests_total[$__rate_interval])))",
-          "legendFormat": "{{method}} {{path}}"
+          "expr": "count(service_up == 1)",
+          "legendFormat": "Services",
+          "instant": false,
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Service Status Over Time",
+      "description": "Service health status (1 = up, 0 = down)",
+      "datasource": "$datasource",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "service_up",
+          "legendFormat": "{{service}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": {
+          "mode": "single"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Total Requests Over Time",
+      "description": "Total requests processed by each service",
+      "datasource": "$datasource",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "http_requests_total",
+          "legendFormat": "{{service}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": {
+          "mode": "single"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Total Revenue Over Time",
+      "description": "Total revenue processed by service",
+      "datasource": "$datasource",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "service_revenue_total",
+          "legendFormat": "{{service}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": {
+          "mode": "single"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right"
+        }
+      }
+    },
+    {
+      "type": "table",
+      "title": "Service Metrics Summary",
+      "description": "Current metrics for all services",
+      "datasource": "$datasource",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "http_requests_total",
+          "legendFormat": "{{service}}",
+          "refId": "A",
+          "format": "table",
+          "instant": false
         }
       ],
       "transformations": [
         {
-          "id": "labelsToFields",
+          "id": "organize",
           "options": {
-            "mode": "columns"
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "app": true,
+              "instance": true,
+              "job": true,
+              "kubernetes_namespace": true,
+              "kubernetes_service_name": true,
+              "monitoring": true,
+              "method": true
+            },
+            "indexByName": {
+              "Value": 2,
+              "service": 1
+            },
+            "renameByName": {
+              "Value": "Total Requests",
+              "service": "Service"
+            }
           }
         }
       ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          }
+        },
+        "overrides": []
+      },
       "options": {
         "showHeader": true,
         "footer": {
@@ -216,4 +383,3 @@
     }
   ]
 }
-

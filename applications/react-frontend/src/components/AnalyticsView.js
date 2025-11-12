@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-function AnalyticsView({ baseUrl, onError, onLoading }) {
+function AnalyticsView({ baseUrl, onError, onLoading, latestTransactionId }) {
   const [analytics, setAnalytics] = useState(null);
   const [report, setReport] = useState(null);
+  const [latestTransaction, setLatestTransaction] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const fetchAnalytics = async () => {
@@ -36,10 +37,34 @@ function AnalyticsView({ baseUrl, onError, onLoading }) {
     }
   };
 
+  const fetchLatestTransaction = async () => {
+    if (!latestTransactionId) return;
+    setLoading(true);
+    onLoading(true);
+    try {
+      const response = await axios.get(`${baseUrl}/api/v1/transactions/${latestTransactionId}`);
+      setLatestTransaction(response.data);
+      onError(null);
+    } catch (error) {
+      onError(`Failed to fetch transaction: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setLoading(false);
+      onLoading(false);
+    }
+  };
+
+  // Auto-fetch latest transaction when ID changes
+  React.useEffect(() => {
+    if (latestTransactionId) {
+      fetchLatestTransaction();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [latestTransactionId]);
+
   return (
     <div className="bg-white rounded-xl shadow-2xl p-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-2">Analytics Engine</h2>
-      <p className="text-gray-600 text-sm mb-6">Analyze transaction data and generate insights</p>
+      <p className="text-gray-600 text-sm mb-6">View latest transaction details and analyze all stored transactions</p>
 
       <div className="space-y-3 mb-6">
         <button
@@ -47,7 +72,7 @@ function AnalyticsView({ baseUrl, onError, onLoading }) {
           disabled={loading}
           className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Analyzing...' : 'Analyze Transactions'}
+          {loading ? 'Analyzing...' : 'Analyze All Transactions'}
         </button>
         <button
           onClick={fetchReport}
@@ -58,10 +83,56 @@ function AnalyticsView({ baseUrl, onError, onLoading }) {
         </button>
       </div>
 
+      {latestTransaction && (
+        <div className="mt-6 p-4 bg-indigo-50 rounded-lg border border-indigo-200 mb-4">
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">Latest Transaction Details</h3>
+          <p className="text-xs text-gray-500 mb-3">This shows only the most recently processed transaction</p>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <span className="text-gray-600">Transaction ID:</span>
+              <span className="ml-2 font-mono text-xs">{latestTransaction.transactionId}</span>
+            </div>
+            <div>
+              <span className="text-gray-600">Customer ID:</span>
+              <span className="ml-2 font-semibold">{latestTransaction.customerId || 'N/A'}</span>
+            </div>
+            <div>
+              <span className="text-gray-600">Subtotal:</span>
+              <span className="ml-2 font-semibold">${latestTransaction.totals?.subtotal?.toFixed(2) || '0.00'}</span>
+            </div>
+            <div>
+              <span className="text-gray-600">Tax:</span>
+              <span className="ml-2 font-semibold">${latestTransaction.totals?.tax?.toFixed(2) || '0.00'}</span>
+            </div>
+            {latestTransaction.totals?.discount > 0 && (
+              <div>
+                <span className="text-gray-600">Discount:</span>
+                <span className="ml-2 font-semibold text-green-600">-${latestTransaction.totals?.discount?.toFixed(2)}</span>
+              </div>
+            )}
+            <div>
+              <span className="text-gray-600">Total:</span>
+              <span className="ml-2 font-semibold text-blue-600">${latestTransaction.totals?.total?.toFixed(2) || '0.00'}</span>
+            </div>
+            <div className="col-span-2">
+              <span className="text-gray-600">Items:</span>
+              <div className="mt-1 space-y-1">
+                {latestTransaction.items?.map((item, idx) => (
+                  <div key={idx} className="text-xs pl-4">
+                    {item.quantity}x {item.name} @ ${item.unitPrice?.toFixed(2)} = ${item.lineTotal?.toFixed(2)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {analytics && (
         <div className="mt-6 space-y-4">
           <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">Summary</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Aggregate Summary</h3>
+            <p className="text-xs text-gray-500 mb-3">Statistics across ALL stored transactions</p>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <span className="text-gray-600">Total Transactions:</span>
