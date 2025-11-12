@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "lint": "eslint . --ext .js --config ../../linting/configs/.eslintrc.js",
+    "lint:fix": "eslint . --ext .js --fix --config ../../linting/configs/.eslintrc.js"
   },
   "keywords": [
     "api-gateway",
@@ -23,6 +25,7 @@
     "redis": "^4.6.12"
   },
   "devDependencies": {
+    "eslint": "^8.56.0",
     "nodemon": "^3.0.2"
   }
 }
