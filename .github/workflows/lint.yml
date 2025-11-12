@@ -22,7 +22,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: |
             applications/js-gateway/package-lock.json
-            applications/react-frontend/package-lock.json
 
       - name: Install JS Gateway dependencies
         working-directory: applications/js-gateway
