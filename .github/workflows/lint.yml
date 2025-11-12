@@ -1,0 +1,194 @@
+name: Lint and Validate
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  # JavaScript/Node.js Linting (ESLint)
+  lint-javascript:
+    name: Lint JavaScript/Node.js
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: |
+            applications/js-gateway/package-lock.json
+            applications/react-frontend/package-lock.json
+
+      - name: Install JS Gateway dependencies
+        working-directory: applications/js-gateway
+        run: npm ci
+
+      - name: Run ESLint on JS Gateway
+        working-directory: applications/js-gateway
+        run: npm run lint
+
+      - name: Install React Frontend dependencies
+        working-directory: applications/react-frontend
+        run: npm ci
+
+      - name: Run ESLint on React Frontend
+        working-directory: applications/react-frontend
+        run: npm run lint
+
+  # Go Linting (golangci-lint)
+  lint-go:
+    name: Lint Go
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.20'
+          cache-dependency-path: applications/go-service/go.sum
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          working-directory: applications/go-service
+          args: --timeout=5m --config=../../linting/configs/.golangci.yml
+
+  # Python Linting (flake8, black)
+  lint-python:
+    name: Lint Python
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: applications/python-service/requirements.txt
+
+      - name: Install Python dependencies
+        working-directory: applications/python-service
+        run: |
+          pip install flake8 black pylint
+          pip install -r requirements.txt
+
+      - name: Run flake8
+        working-directory: applications/python-service
+        run: flake8 . --config=../../linting/configs/.flake8 --count --select=E9,F63,F7,F82 --show-source --statistics || true
+
+      - name: Check code formatting with black
+        working-directory: applications/python-service
+        run: black --check . || (echo "Code formatting issues found. Run 'black .' to fix." && exit 1)
+
+  # Terraform Validation
+  lint-terraform:
+    name: Validate Terraform
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.5.0'
+
+      - name: Terraform Format Check
+        working-directory: terraform
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init -backend=false
+
+      - name: Terraform Validate
+        working-directory: terraform
+        run: terraform validate
+
+  # Kubernetes YAML Validation
+  lint-kubernetes:
+    name: Validate Kubernetes Manifests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Validate YAML syntax
+        run: |
+          yamllint -c linting/configs/.yamllint.yml k8s/
+
+      - name: Validate Kubernetes manifests
+        run: |
+          for file in $(find k8s -name "*.yaml" -o -name "*.yml"); do
+            echo "Validating $file"
+            kubectl apply --dry-run=client -f "$file" || exit 1
+          done
+
+  # Helm Chart Linting
+  lint-helm:
+    name: Lint Helm Charts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: '3.12.0'
+
+      - name: Lint Helm charts
+        run: |
+          for chart in charts/local/*/; do
+            if [ -f "$chart/Chart.yaml" ]; then
+              echo "Linting $chart"
+              helm lint "$chart" || exit 1
+            fi
+          done
+
+  # C# / .NET Linting (optional - can be added if needed)
+  lint-dotnet:
+    name: Lint C# / .NET
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        working-directory: applications/csharp-risk-service
+        run: dotnet restore
+
+      - name: Build C# service
+        working-directory: applications/csharp-risk-service
+        run: dotnet build --no-restore
+
+      - name: Restore dependencies
+        working-directory: applications/dotnet-service
+        run: dotnet restore
+
+      - name: Build .NET service
+        working-directory: applications/dotnet-service
+        run: dotnet build --no-restore
+

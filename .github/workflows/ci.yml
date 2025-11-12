@@ -1,0 +1,38 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  # Build and test Docker images
+  build-docker:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - go-service
+          - python-service
+          - js-gateway
+          - react-frontend
+          - csharp-risk-service
+          - dotnet-service
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        working-directory: applications/${{ matrix.service }}
+        run: |
+          docker build --platform linux/amd64 -t ${{ matrix.service }}:test .
+
+      - name: Test Docker image exists
+        run: |
+          docker images | grep ${{ matrix.service }}:test || exit 1
+
