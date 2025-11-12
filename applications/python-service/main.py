@@ -9,6 +9,7 @@ import json
 import time
 import signal
 import sys
+import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime
 from typing import Dict, Any, List
@@ -19,11 +20,18 @@ from statistics import mean, median
 class AnalyticsHandler(BaseHTTPRequestHandler):
     """HTTP request handler for analytics endpoints"""
     
-    def __init__(self, config: Dict[str, str], *args, **kwargs):
+    def __init__(self, config: Dict[str, str], state: Dict[str, Any], *args, **kwargs):
         self.config = config
-        # In-memory storage for demo (in production, use a database)
-        self.transactions: List[Dict] = []
+        self.state = state
         super().__init__(*args, **kwargs)
+    
+    @property
+    def transactions(self) -> List[Dict]:
+        return self.state["transactions"]
+
+    @property
+    def lock(self) -> threading.Lock:
+        return self.state["lock"]
     
     def log_message(self, format, *args):
         """Override to use custom logging format"""
@@ -72,11 +80,13 @@ class AnalyticsHandler(BaseHTTPRequestHandler):
         body = self.rfile.read(content_length)
         try:
             transaction = json.loads(body.decode('utf-8'))
-            self.transactions.append(transaction)
+            with self.lock:
+                self.transactions.append(transaction)
+                total_transactions = len(self.transactions)
             response = {
                 "message": "Transaction stored successfully",
                 "transaction_id": transaction.get("transaction_id"),
-                "total_transactions": len(self.transactions)
+                "total_transactions": total_transactions
             }
             self.send_json_response(200, response)
         except json.JSONDecodeError:
@@ -86,7 +96,10 @@ class AnalyticsHandler(BaseHTTPRequestHandler):
         """Analyze stored transactions and generate insights"""
         start_time = time.time()
         
-        if not self.transactions:
+        with self.lock:
+            transactions_copy = list(self.transactions)
+        
+        if not transactions_copy:
             response = {
                 "message": "No transactions to analyze",
                 "total_transactions": 0
@@ -95,10 +108,10 @@ class AnalyticsHandler(BaseHTTPRequestHandler):
             return
         
         # Data Analysis: Calculate statistics
-        totals = [t.get("total", 0) for t in self.transactions]
-        subtotals = [t.get("subtotal", 0) for t in self.transactions]
-        taxes = [t.get("tax", 0) for t in self.transactions]
-        discounts = [t.get("discount", 0) for t in self.transactions]
+        totals = [t.get("total", 0) for t in transactions_copy]
+        subtotals = [t.get("subtotal", 0) for t in transactions_copy]
+        taxes = [t.get("tax", 0) for t in transactions_copy]
+        discounts = [t.get("discount", 0) for t in transactions_copy]
         
         # Revenue analysis
         total_revenue = sum(totals)
@@ -111,7 +124,7 @@ class AnalyticsHandler(BaseHTTPRequestHandler):
         category_revenue = defaultdict(float)
         category_count = defaultdict(int)
         
-        for transaction in self.transactions:
+        for transaction in transactions_copy:
             for item in transaction.get("items", []):
                 category = item.get("category", "uncategorized")
                 category_revenue[category] += item.get("price", 0) * item.get("quantity", 0)
@@ -119,7 +132,7 @@ class AnalyticsHandler(BaseHTTPRequestHandler):
         
         # Time-based analysis
         transactions_by_hour = defaultdict(int)
-        for transaction in self.transactions:
+        for transaction in transactions_copy:
             try:
                 timestamp = datetime.fromisoformat(transaction.get("timestamp", "").replace("Z", "+00:00"))
                 hour = timestamp.hour
@@ -136,7 +149,7 @@ class AnalyticsHandler(BaseHTTPRequestHandler):
         
         analysis = {
             "summary": {
-                "total_transactions": len(self.transactions),
+                "total_transactions": len(transactions_copy),
                 "total_revenue": round(total_revenue, 2),
                 "average_order_value": round(average_order_value, 2),
                 "median_order_value": round(median_order_value, 2),
@@ -154,7 +167,7 @@ class AnalyticsHandler(BaseHTTPRequestHandler):
             },
             "discount_analysis": {
                 "transactions_with_discount": transactions_with_discount,
-                "discount_rate": round(transactions_with_discount / len(self.transactions) * 100, 2) if self.transactions else 0,
+                "discount_rate": round(transactions_with_discount / len(transactions_copy) * 100, 2) if transactions_copy else 0,
                 "average_discount": round(avg_discount, 2),
                 "total_discount_value": round(total_discounts_given, 2)
             },
@@ -171,23 +184,25 @@ class AnalyticsHandler(BaseHTTPRequestHandler):
     def prometheus_metrics(self):
         """Prometheus-compatible metrics endpoint"""
         service_name = self.config.get("service_name", "python-service")
+        with self.lock:
+            total_transactions = len(self.transactions)
         metrics = f"""# HELP http_requests_total Total number of HTTP requests
 # TYPE http_requests_total counter
-http_requests_total{{service="{service_name}",method="total"}} {len(self.transactions)}
+http_requests_total{{service=\"{service_name}\",method=\"total\"}} {total_transactions}
 
 # HELP http_request_duration_seconds Request duration in seconds
 # TYPE http_request_duration_seconds histogram
-http_request_duration_seconds{{service="{service_name}",quantile="0.5"}} 0.05
-http_request_duration_seconds{{service="{service_name}",quantile="0.95"}} 0.1
-http_request_duration_seconds{{service="{service_name}",quantile="0.99"}} 0.2
+http_request_duration_seconds{{service=\"{service_name}\",quantile=\"0.5\"}} 0.05
+http_request_duration_seconds{{service=\"{service_name}\",quantile=\"0.95\"}} 0.1
+http_request_duration_seconds{{service=\"{service_name}\",quantile=\"0.99\"}} 0.2
 
 # HELP service_transactions_stored Total transactions stored
 # TYPE service_transactions_stored counter
-service_transactions_stored{{service="{service_name}"}} {len(self.transactions)}
+service_transactions_stored{{service=\"{service_name}\"}} {total_transactions}
 
 # HELP service_up Service availability
 # TYPE service_up gauge
-service_up{{service="{service_name}"}} 1
+service_up{{service=\"{service_name}\"}} 1
 """
         self.send_response(200)
         self.send_header('Content-Type', 'text/plain')
@@ -196,61 +211,65 @@ service_up{{service="{service_name}"}} 1
     
     def generate_report(self):
         """Generate a comprehensive report"""
-        if not self.transactions:
+        with self.lock:
+            transactions_copy = list(self.transactions)
+        if not transactions_copy:
             self.send_error(404, "No transactions available for reporting")
             return
         
-        totals = [t.get("total", 0) for t in self.transactions]
+        totals = [t.get("total", 0) for t in transactions_copy]
         total_revenue = sum(totals)
         
         report = {
             "report_type": "transaction_analytics",
             "generated_at": datetime.now().isoformat(),
             "period": {
-                "start": min([t.get("timestamp") for t in self.transactions if t.get("timestamp")]),
-                "end": max([t.get("timestamp") for t in self.transactions if t.get("timestamp")])
+                "start": min([t.get("timestamp") for t in transactions_copy if t.get("timestamp")]),
+                "end": max([t.get("timestamp") for t in transactions_copy if t.get("timestamp")])
             },
             "key_metrics": {
-                "total_transactions": len(self.transactions),
+                "total_transactions": len(transactions_copy),
                 "total_revenue": round(total_revenue, 2),
                 "average_order_value": round(mean(totals), 2) if totals else 0,
-                "revenue_per_transaction": round(total_revenue / len(self.transactions), 2) if self.transactions else 0
+                "revenue_per_transaction": round(total_revenue / len(transactions_copy), 2) if transactions_copy else 0
             },
-            "recommendations": self._generate_recommendations()
+            "recommendations": self._generate_recommendations(transactions_copy)
         }
         
         self.send_json_response(200, report)
     
-    def _generate_recommendations(self) -> List[str]:
+    def _generate_recommendations(self, transactions: List[Dict]) -> List[str]:
         """Generate business recommendations based on data"""
         recommendations = []
         
-        if not self.transactions:
+        if not transactions:
             return ["No data available for recommendations"]
         
-        totals = [t.get("total", 0) for t in self.transactions]
+        totals = [t.get("total", 0) for t in transactions]
         avg_order = mean(totals) if totals else 0
         
         if avg_order < 50:
             recommendations.append("Average order value is low. Consider bundle deals or upselling.")
         
-        discounts = [t.get("discount", 0) for t in self.transactions]
-        discount_rate = sum(1 for d in discounts if d > 0) / len(self.transactions)
+        discounts = [t.get("discount", 0) for t in transactions]
+        discount_rate = sum(1 for d in discounts if d > 0) / len(transactions)
         
         if discount_rate > 0.5:
             recommendations.append("High discount usage detected. Review discount strategy.")
         
-        recommendations.append(f"Total of {len(self.transactions)} transactions processed. System is performing well.")
+        recommendations.append(f"Total of {len(transactions)} transactions processed. System is performing well.")
         
         return recommendations
     
     def get_metrics(self):
         """Get service metrics"""
+        with self.lock:
+            transaction_count = len(self.transactions)
         metrics = {
             "service": self.config.get("service_name", "python-service"),
             "version": "1.0.0",
             "environment": self.config.get("environment", "development"),
-            "transactions_stored": len(self.transactions),
+            "transactions_stored": transaction_count,
             "status": "operational"
         }
         self.send_json_response(200, metrics)
@@ -263,10 +282,10 @@ service_up{{service="{service_name}"}} 1
         self.wfile.write(json.dumps(data, indent=2).encode('utf-8'))
 
 
-def create_handler(config: Dict[str, str]):
-    """Factory function to create handler with config"""
+def create_handler(config: Dict[str, str], state: Dict[str, Any]):
+    """Factory function to create handler with config and shared state"""
     def handler(*args, **kwargs):
-        return AnalyticsHandler(config, *args, **kwargs)
+        return AnalyticsHandler(config, state, *args, **kwargs)
     return handler
 
 
@@ -289,13 +308,18 @@ def main():
     """Main application entry point"""
     config = load_config()
     port = int(config["port"])
+
+    state = {
+        "transactions": [],
+        "lock": threading.Lock()
+    }
     
     # Set up signal handlers for graceful shutdown
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
     
     # Create HTTP server
-    handler = create_handler(config)
+    handler = create_handler(config, state)
     server = HTTPServer(('0.0.0.0', port), handler)
     
     print(f"Starting {config['service_name']} on port {port}")
