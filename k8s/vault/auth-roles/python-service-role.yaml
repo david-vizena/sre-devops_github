@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-python-service-role
+  namespace: default
+  labels:
+    app: vault
+    component: auth-role
+data:
+  role.hcl: |
+    # Kubernetes auth role for python-service-worker
+    # This allows the python-service-worker service account to authenticate to Vault
+    # and receive the python-service-policy
+
+    # To create this role in Vault:
+    # kubectl exec -it vault-vault-0 -n data-services -- vault write auth/kubernetes/role/python-service \
+    #   bound_service_account_names=python-service-worker \
+    #   bound_service_account_namespaces=default \
+    #   policies=python-service-policy \
+    #   ttl=1h
+

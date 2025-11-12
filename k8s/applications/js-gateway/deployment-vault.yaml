@@ -1,0 +1,202 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: js-gateway
+  namespace: default
+  labels:
+    app: js-gateway
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: js-gateway
+  template:
+    metadata:
+      labels:
+        app: js-gateway
+        version: v1
+    spec:
+      serviceAccountName: js-gateway
+      imagePullSecrets:
+      - name: acr-secret
+      # Init container to render Vault Agent config
+      initContainers:
+      - name: vault-agent-init
+        image: hashicorp/vault:1.15.0
+        command: ['sh', '-c']
+        args:
+          - |
+            cat > /vault/config/vault-agent.hcl <<EOF
+            pid_file = "/tmp/vault-agent.pid"
+            
+            auto_auth {
+              method "kubernetes" {
+                mount_path = "auth/kubernetes"
+                config = {
+                  role = "js-gateway"
+                }
+              }
+              
+              sink "file" {
+                config = {
+                  path = "/tmp/vault-token"
+                }
+              }
+            }
+            
+            cache {
+              use_auto_auth_token = true
+            }
+            
+            template {
+              source      = "/vault/secrets/secrets.tpl"
+              destination = "/vault/secrets/secrets.env"
+              command     = ""
+            }
+            
+            vault {
+              address = "http://vault-vault.data-services.svc.cluster.local:8200"
+            }
+            EOF
+            
+            cat > /vault/secrets/secrets.tpl <<EOF
+            {{- with secret "secret/data/shared/redis" }}
+            REDIS_PASSWORD={{ .Data.data.password }}
+            {{- end }}
+            
+            {{- with secret "secret/data/shared/rabbitmq" }}
+            RABBITMQ_USERNAME={{ .Data.data.rabbitmq-username }}
+            RABBITMQ_PASSWORD={{ .Data.data.rabbitmq-password }}
+            {{- end }}
+            
+            {{- with secret "secret/data/shared/postgresql" }}
+            POSTGRES_DB={{ .Data.data.app-database }}
+            POSTGRES_USER={{ .Data.data.app-username }}
+            POSTGRES_PASSWORD={{ .Data.data.app-password }}
+            {{- end }}
+            EOF
+        volumeMounts:
+        - name: vault-config
+          mountPath: /vault/config
+        - name: vault-secrets
+          mountPath: /vault/secrets
+      containers:
+      - name: vault-agent
+        image: hashicorp/vault:1.15.0
+        command: ['/bin/sh', '-c']
+        args:
+          - |
+            vault agent -config=/vault/config/vault-agent.hcl
+        env:
+        - name: VAULT_ADDR
+          value: "http://vault-vault.data-services.svc.cluster.local:8200"
+        volumeMounts:
+        - name: vault-config
+          mountPath: /vault/config
+        - name: vault-secrets
+          mountPath: /vault/secrets
+        - name: vault-token
+          mountPath: /tmp
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+      - name: js-gateway
+        image: acrsredevops.azurecr.io/js-gateway:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8082
+          name: http
+          protocol: TCP
+        env:
+        - name: PORT
+          value: "8082"
+        - name: SERVICE_NAME
+          value: "js-gateway"
+        - name: GO_SERVICE_URL
+          value: "http://go-service:8080"
+        - name: PYTHON_SERVICE_URL
+          value: "http://python-service:8081"
+        - name: CSHARP_RISK_SERVICE_URL
+          value: "http://csharp-risk-service:8083"
+        - name: DOTNET_SERVICE_URL
+          value: "http://dotnet-service:8084"
+        - name: REDIS_HOST
+          value: "redis-redis.data-services.svc.cluster.local"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: AGGREGATE_CACHE_TTL
+          value: "60"
+        - name: RABBITMQ_HOST
+          value: "rabbitmq-rabbitmq.data-services.svc.cluster.local"
+        - name: RABBITMQ_PORT
+          value: "5672"
+        - name: RABBITMQ_QUEUE
+          value: "analytics.events"
+        - name: RABBITMQ_EXCHANGE
+          value: "analytics"
+        - name: RABBITMQ_ROUTING_KEY
+          value: "analytics.events"
+        - name: POSTGRES_HOST
+          value: "postgresql-postgresql.data-services.svc.cluster.local"
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_SSLMODE
+          value: "disable"
+        - name: POSTGRES_MAX_CONNS
+          value: "10"
+        - name: TRANSACTION_CACHE_TTL
+          value: "120"
+        volumeMounts:
+        - name: vault-secrets
+          mountPath: /vault/secrets
+          readOnly: true
+        # Source environment variables from Vault Agent rendered file
+        command: ['/bin/sh', '-c']
+        args:
+          - |
+            # Wait for Vault Agent to render secrets
+            while [ ! -f /vault/secrets/secrets.env ]; do
+              echo "Waiting for Vault Agent to render secrets..."
+              sleep 1
+            done
+            # Source secrets and start application
+            set -a
+            source /vault/secrets/secrets.env
+            set +a
+            exec node server.js
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8082
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8082
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: vault-config
+        emptyDir: {}
+      - name: vault-secrets
+        emptyDir: {}
+      - name: vault-token
+        emptyDir: {}
+

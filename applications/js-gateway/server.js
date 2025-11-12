@@ -118,9 +118,8 @@ app.use((req, res, next) => {
 });
 
 /**
- * Health check endpoint
+ * Prometheus metrics endpoint
  */
-// Prometheus metrics endpoint
 app.get('/metrics', (req, res) => {
   res.set('Content-Type', 'text/plain');
   const metrics = `# HELP http_requests_total Total number of HTTP requests
@@ -140,6 +139,9 @@ service_up{service="js-gateway"} 1
   res.send(metrics);
 });
 
+/**
+ * Health check endpoint
+ */
 app.get('/health', async (req, res) => {
   let databaseStatus = 'unknown';
   try {

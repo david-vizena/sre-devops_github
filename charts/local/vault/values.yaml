@@ -1,0 +1,52 @@
+# Vault Configuration
+vault:
+  image:
+    repository: hashicorp/vault
+    tag: 1.15.0
+    pullPolicy: IfNotPresent
+
+  # Storage backend (file for dev, can be upgraded to Consul or Azure Key Vault)
+  storage:
+    type: file
+    path: /vault/data
+
+  # Service account for Vault
+  serviceAccount:
+    create: true
+    name: vault
+
+  # Resources
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 8200
+
+  # Replicas (for HA, use 3+ with Consul backend)
+  replicas: 1
+
+  # TLS configuration (disabled for dev, enable for prod)
+  tls:
+    enabled: false
+
+# Namespace
+namespace: data-services
+
+# Enable Kubernetes auth backend
+kubernetesAuth:
+  enabled: true
+  serviceAccountName: vault-auth
+
+# Enable file audit logging
+audit:
+  enabled: true
+  file:
+    path: /vault/logs/audit.log
+

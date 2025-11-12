@@ -63,17 +63,17 @@ module "networking" {
 module "aks" {
   source = "./modules/aks"
 
-  resource_group_name = azurerm_resource_group.main.name
-  location            = azurerm_resource_group.main.location
-  cluster_name        = var.cluster_name
-  dns_prefix          = var.dns_prefix
-  node_count          = var.node_count
-  vm_size             = var.vm_size
-  subnet_id           = module.networking.subnet_ids["aks"]
-  acr_id              = module.acr.registry_id
+  resource_group_name             = azurerm_resource_group.main.name
+  location                        = azurerm_resource_group.main.location
+  cluster_name                    = var.cluster_name
+  dns_prefix                      = var.dns_prefix
+  node_count                      = var.node_count
+  vm_size                         = var.vm_size
+  subnet_id                       = module.networking.subnet_ids["aks"]
+  acr_id                          = module.acr.registry_id
   service_principal_client_id     = var.service_principal_client_id
   service_principal_client_secret = var.service_principal_client_secret
-  kubernetes_version  = var.kubernetes_version != "" ? var.kubernetes_version : null
+  kubernetes_version              = var.kubernetes_version != "" ? var.kubernetes_version : null
 }
 
 # DNS Zone (if domain is provided)

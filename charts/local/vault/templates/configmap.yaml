@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "vault.fullname" . }}-config
+  namespace: {{ include "vault.namespace" . }}
+  labels:
+    {{- include "vault.labels" . | nindent 4 }}
+data:
+  vault.hcl: |
+    ui = true
+    disable_mlock = true
+
+    storage "file" {
+      path = "/vault/data"
+    }
+
+    listener "tcp" {
+      address     = "0.0.0.0:8200"
+      tls_disable = 1
+    }
+
+    {{- if .Values.kubernetesAuth.enabled }}
+    # Kubernetes auth backend
+    # Will be enabled via CLI after Vault is initialized
+    {{- end }}
+
+    {{- if .Values.audit.enabled }}
+    audit_device "file" {
+      path = "{{ .Values.audit.file.path }}"
+    }
+    {{- end }}
+
+    # API address
+    api_addr = "http://{{ include "vault.fullname" . }}:8200"
+    cluster_addr = "http://{{ include "vault.fullname" . }}:8201"
+

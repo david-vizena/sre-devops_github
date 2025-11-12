@@ -34,8 +34,8 @@ resource "azurerm_kubernetes_cluster" "main" {
     network_plugin    = "azure"
     network_policy    = "azure"
     load_balancer_sku = "standard"
-    service_cidr      = "172.16.0.0/16"  # Kubernetes service CIDR (must not overlap with VNet)
-    dns_service_ip    = "172.16.0.10"    # Must be within service_cidr
+    service_cidr      = "172.16.0.0/16" # Kubernetes service CIDR (must not overlap with VNet)
+    dns_service_ip    = "172.16.0.10"   # Must be within service_cidr
     # Note: pod_cidr is not needed with Azure CNI - it uses VNet directly
   }
 

@@ -1,0 +1,28 @@
+Vault has been deployed!
+
+1. Get the Vault pod name:
+   kubectl get pods -n {{ include "vault.namespace" . }} -l app.kubernetes.io/name={{ include "vault.name" . }}
+
+2. Initialize Vault (first time only):
+   kubectl exec -it {{ include "vault.fullname" . }}-0 -n {{ include "vault.namespace" . }} -- vault operator init
+
+3. Unseal Vault (save the unseal keys and root token):
+   kubectl exec -it {{ include "vault.fullname" . }}-0 -n {{ include "vault.namespace" . }} -- vault operator unseal <unseal-key>
+
+4. Access Vault UI:
+   kubectl port-forward svc/{{ include "vault.fullname" . }} -n {{ include "vault.namespace" . }} 8200:8200
+   Then visit: http://localhost:8200
+
+5. Enable Kubernetes auth backend:
+   kubectl exec -it {{ include "vault.fullname" . }}-0 -n {{ include "vault.namespace" . }} -- vault auth enable kubernetes
+
+6. Configure Kubernetes auth:
+   kubectl exec -it {{ include "vault.fullname" . }}-0 -n {{ include "vault.namespace" . }} -- vault write auth/kubernetes/config \
+     token_reviewer_jwt="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+     kubernetes_host="https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT" \
+     kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+
+7. Create Vault policies (see k8s/vault/policies/)
+
+8. Create Kubernetes auth roles (see k8s/vault/auth-roles/)
+
