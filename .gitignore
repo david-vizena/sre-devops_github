@@ -76,3 +76,6 @@ ACCESS.md
 # Misc
 *.bak
 *.tmp
+vault-unseal-key.txt
+vault-root-token.txt
+vault-keys.env

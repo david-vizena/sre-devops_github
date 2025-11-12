@@ -30,6 +30,10 @@ spec:
             cat > /vault/config/vault-agent.hcl <<EOF
             pid_file = "/tmp/vault-agent.pid"
             
+            vault {
+              address = "http://vault.monitoring.svc.cluster.local:8200"
+            }
+            
             auto_auth {
               method "kubernetes" {
                 mount_path = "auth/kubernetes"
@@ -45,35 +49,21 @@ spec:
               }
             }
             
-            cache {
-              use_auto_auth_token = true
-            }
-            
             template {
               source      = "/vault/secrets/secrets.tpl"
               destination = "/vault/secrets/secrets.env"
               command     = ""
             }
-            
-            vault {
-              address = "http://vault-vault.data-services.svc.cluster.local:8200"
-            }
             EOF
             
             cat > /vault/secrets/secrets.tpl <<EOF
-            {{- with secret "secret/data/shared/redis" }}
-            REDIS_PASSWORD={{ .Data.data.password }}
-            {{- end }}
-            
-            {{- with secret "secret/data/shared/rabbitmq" }}
-            RABBITMQ_USERNAME={{ .Data.data.rabbitmq-username }}
-            RABBITMQ_PASSWORD={{ .Data.data.rabbitmq-password }}
-            {{- end }}
-            
-            {{- with secret "secret/data/shared/postgresql" }}
-            POSTGRES_DB={{ .Data.data.app-database }}
-            POSTGRES_USER={{ .Data.data.app-username }}
-            POSTGRES_PASSWORD={{ .Data.data.app-password }}
+            {{- with secret "secret/data/js-gateway" }}
+            REDIS_PASSWORD={{ .Data.data.redis_password }}
+            RABBITMQ_USERNAME={{ .Data.data.rabbitmq_username }}
+            RABBITMQ_PASSWORD={{ .Data.data.rabbitmq_password }}
+            POSTGRES_DB={{ .Data.data.postgres_db }}
+            POSTGRES_USER={{ .Data.data.postgres_user }}
+            POSTGRES_PASSWORD={{ .Data.data.postgres_password }}
             {{- end }}
             EOF
         volumeMounts:
@@ -90,7 +80,7 @@ spec:
             vault agent -config=/vault/config/vault-agent.hcl
         env:
         - name: VAULT_ADDR
-          value: "http://vault-vault.data-services.svc.cluster.local:8200"
+          value: "http://vault.monitoring.svc.cluster.local:8200"
         volumeMounts:
         - name: vault-config
           mountPath: /vault/config
@@ -100,11 +90,11 @@ spec:
           mountPath: /tmp
         resources:
           requests:
+            memory: "32Mi"
+            cpu: "25m"
+          limits:
             memory: "64Mi"
             cpu: "50m"
-          limits:
-            memory: "128Mi"
-            cpu: "100m"
       - name: js-gateway
         image: acrsredevops.azurecr.io/js-gateway:latest
         imagePullPolicy: Always

@@ -1,7 +1,7 @@
 # Policy for js-gateway service
 # Allows read access to Redis, RabbitMQ, and PostgreSQL secrets
 
-path "secret/data/js-gateway/*" {
+path "secret/data/js-gateway" {
   capabilities = ["read"]
 }
 
