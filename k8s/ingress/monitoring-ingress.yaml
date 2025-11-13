@@ -20,7 +20,7 @@ spec:
             name: prometheus
             port:
               number: 9090
-      # Jaeger - rewrite /jaeger to /
+      # Jaeger - route all /jaeger paths (including /jaeger/static, /jaeger/api, etc.)
       - path: /jaeger(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
