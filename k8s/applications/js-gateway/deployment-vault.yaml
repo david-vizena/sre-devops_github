@@ -88,6 +88,10 @@ spec:
           mountPath: /vault/secrets
         - name: vault-token
           mountPath: /tmp
+        # Mount service account token for Kubernetes authentication
+        - name: service-account-token
+          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          readOnly: true
         resources:
           requests:
             memory: "32Mi"
@@ -189,4 +193,11 @@ spec:
         emptyDir: {}
       - name: vault-token
         emptyDir: {}
+      # Service account token volume (automatically mounted by Kubernetes)
+      - name: service-account-token
+        projected:
+          sources:
+          - serviceAccountToken:
+              path: token
+              expirationSeconds: 3600
 
