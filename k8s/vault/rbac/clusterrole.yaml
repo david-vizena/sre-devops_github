@@ -1,0 +1,23 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"rbac.authorization.k8s.io/v1","kind":"ClusterRole","metadata":{"annotations":{},"name":"vault-auth-reviewer"},"rules":[{"apiGroups":[""],"resources":["serviceaccounts"],"verbs":["get"]},{"apiGroups":["authentication.k8s.io"],"resources":["tokenreviews"],"verbs":["create"]}]}
+  creationTimestamp: "2025-11-13T17:20:50Z"
+  name: vault-auth-reviewer
+  resourceVersion: "3213993"
+  uid: a833f2fe-80fd-4bcc-b82f-2b88738c9e9e
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - get
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create

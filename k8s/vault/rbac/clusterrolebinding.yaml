@@ -1,0 +1,18 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"rbac.authorization.k8s.io/v1","kind":"ClusterRoleBinding","metadata":{"annotations":{},"name":"vault-auth-reviewer"},"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"ClusterRole","name":"vault-auth-reviewer"},"subjects":[{"kind":"ServiceAccount","name":"vault","namespace":"monitoring"}]}
+  creationTimestamp: "2025-11-13T17:20:55Z"
+  name: vault-auth-reviewer
+  resourceVersion: "3214018"
+  uid: 927d67bb-fc21-4dbc-a328-704421c93909
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: vault-auth-reviewer
+subjects:
+- kind: ServiceAccount
+  name: vault
+  namespace: monitoring
