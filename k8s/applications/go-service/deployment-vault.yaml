@@ -44,10 +44,6 @@ spec:
               }
             }
             
-            cache {
-              use_auto_auth_token = true
-            }
-            
             template {
               source      = "/vault/secrets/secrets.tpl"
               destination = "/vault/secrets/secrets.env"

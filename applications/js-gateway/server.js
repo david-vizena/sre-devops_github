@@ -145,6 +145,7 @@ service_up{service="js-gateway"} 1
 /**
  * Health check endpoint
  */
+// Health check endpoint (works with and without /api prefix due to ingress)
 app.get('/health', async (req, res) => {
   let databaseStatus = 'unknown';
   try {

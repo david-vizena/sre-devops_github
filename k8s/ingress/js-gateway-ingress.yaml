@@ -5,14 +5,18 @@ metadata:
   namespace: default
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    # Rewrite /api to / so gateway receives requests at root
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   ingressClassName: nginx
   rules:
   # Default rule (no host required) - works with IP access
   - http:
       paths:
-      - path: /api
-        pathType: Prefix
+      # Rewrite /api(/|$)(.*) to /$2 (strips /api prefix)
+      - path: /api(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: js-gateway
