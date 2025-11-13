@@ -26,8 +26,9 @@ spec:
   - host: 20.241.246.50.nip.io
     http:
       paths:
-      - path: /api
-        pathType: Prefix
+      # Rewrite /api(/|$)(.*) to /$2 (strips /api prefix)
+      - path: /api(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: js-gateway
