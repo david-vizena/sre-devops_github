@@ -23,9 +23,19 @@ spec:
           name: collector-http
         - containerPort: 14250
           name: collector-grpc
+        - containerPort: 4317
+          name: otlp-grpc
+        - containerPort: 4318
+          name: otlp-http
         env:
         - name: COLLECTOR_ZIPKIN_HTTP_PORT
           value: "9411"
+        - name: COLLECTOR_OTLP_ENABLED
+          value: "true"
+        - name: COLLECTOR_OTLP_GRPC_ENABLED
+          value: "true"
+        - name: COLLECTOR_OTLP_HTTP_ENABLED
+          value: "true"
         resources:
           requests:
             memory: "256Mi"
@@ -51,6 +61,12 @@ spec:
   - port: 14250
     targetPort: 14250
     name: collector-grpc
+  - port: 4317
+    targetPort: 4317
+    name: otlp-grpc
+  - port: 4318
+    targetPort: 4318
+    name: otlp-http
   selector:
     app: jaeger
 

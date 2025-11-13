@@ -3,6 +3,9 @@
  * This is the entry point for all client requests
  */
 
+// Initialize OpenTelemetry tracing first (before other imports)
+require('./tracing');
+
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');

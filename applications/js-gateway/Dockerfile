@@ -21,6 +21,7 @@ COPY --from=builder /app/node_modules ./node_modules
 
 # Copy application code
 COPY server.js .
+COPY tracing.js .
 COPY lib ./lib
 
 # Create non-root user for security

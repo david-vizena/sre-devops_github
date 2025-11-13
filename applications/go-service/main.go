@@ -16,6 +16,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 type Config struct {
@@ -87,6 +88,20 @@ type Server struct {
 }
 
 func main() {
+	// Initialize OpenTelemetry tracing first
+	tp, err := initTracing()
+	if err != nil {
+		log.Printf("failed to initialize tracing: %v (continuing without tracing)", err)
+	} else {
+		defer func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := tp.Shutdown(ctx); err != nil {
+				log.Printf("failed to shutdown tracer provider: %v", err)
+			}
+		}()
+	}
+
 	config := loadConfig()
 
 	ctx := context.Background()
@@ -111,9 +126,17 @@ func main() {
 	mux.HandleFunc("/api/v1/stats", server.statsHandler)
 	mux.HandleFunc("/metrics", server.metricsHandler)
 
+	// Wrap handler with OpenTelemetry HTTP instrumentation
+	handler := mux
+	if tp != nil {
+		handler = otelhttp.NewHandler(mux, "go-service",
+			otelhttp.WithMessageEvents(otelhttp.ReadEvents, otelhttp.WriteEvents),
+		)
+	}
+
 	httpServer := &http.Server{
 		Addr:         ":" + config.Port,
-		Handler:      mux,
+		Handler:      handler,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
