@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: portfolio-ingress
+  name: react-frontend-ingress
   namespace: default
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
@@ -18,13 +18,6 @@ spec:
             name: react-frontend
             port:
               number: 80
-      - path: /api
-        pathType: Prefix
-        backend:
-          service:
-            name: js-gateway
-            port:
-              number: 8082
   # Host-based rule (optional - for custom domain)
   - host: 20.241.246.50.nip.io
     http:
@@ -36,11 +29,4 @@ spec:
             name: react-frontend
             port:
               number: 80
-      - path: /api
-        pathType: Prefix
-        backend:
-          service:
-            name: js-gateway
-            port:
-              number: 8082
 
