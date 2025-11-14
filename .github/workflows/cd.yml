@@ -3,7 +3,11 @@ name: Continuous Deployment
 on:
   push:
     branches: [ main ]
+    # Only run on main branch pushes, not on PRs
   workflow_dispatch:
+  # Explicitly exclude pull requests
+  pull_request:
+    types: []  # This prevents the workflow from running on PRs
 
 env:
   ACR_NAME: acrsredevops
