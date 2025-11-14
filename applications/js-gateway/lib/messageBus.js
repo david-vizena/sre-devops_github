@@ -70,7 +70,7 @@ async function publish(eventType, payload) {
         } else {
           resolve();
         }
-      }
+      },
     );
   });
 }

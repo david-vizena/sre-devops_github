@@ -28,7 +28,7 @@ async function authenticateToken(req, res, next) {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ 
       error: 'Unauthorized',
-      message: 'No token provided. Include Authorization: Bearer <token> header.'
+      message: 'No token provided. Include Authorization: Bearer <token> header.',
     });
   }
 
@@ -47,9 +47,9 @@ async function authenticateToken(req, res, next) {
         {},
         {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
 
       if (response.data.valid) {
@@ -91,6 +91,6 @@ async function optionalAuth(req, res, next) {
 
 module.exports = {
   authenticateToken,
-  optionalAuth
+  optionalAuth,
 };
 

@@ -13,7 +13,7 @@ const cors = require('cors');
 const cache = require('./lib/cache');
 const messageBus = require('./lib/messageBus');
 const database = require('./lib/database');
-const { authenticateToken, optionalAuth } = require('./lib/auth');
+const { authenticateToken } = require('./lib/auth');
 
 const app = express();
 const PORT = process.env.PORT || 8082;
@@ -155,7 +155,7 @@ app.post('/v1/auth/register', async (req, res) => {
   } catch (error) {
     res.status(error.response?.status || 500).json({
       error: 'Registration failed',
-      message: error.response?.data?.error || error.message
+      message: error.response?.data?.error || error.message,
     });
   }
 });
@@ -167,7 +167,7 @@ app.post('/v1/auth/login', async (req, res) => {
   } catch (error) {
     res.status(error.response?.status || 500).json({
       error: 'Login failed',
-      message: error.response?.data?.error || error.message
+      message: error.response?.data?.error || error.message,
     });
   }
 });
@@ -179,13 +179,13 @@ app.post('/v1/auth/validate', authenticateToken, async (req, res) => {
 app.get('/v1/auth/me', authenticateToken, async (req, res) => {
   try {
     const response = await axios.get(`${AUTH_SERVICE_URL}/api/v1/me`, {
-      headers: { Authorization: req.headers.authorization }
+      headers: { Authorization: req.headers.authorization },
     });
     res.json(response.data);
   } catch (error) {
     res.status(error.response?.status || 500).json({
       error: 'Failed to get user info',
-      message: error.response?.data?.error || error.message
+      message: error.response?.data?.error || error.message,
     });
   }
 });
@@ -209,13 +209,13 @@ app.get('/health', async (req, res) => {
     service: SERVICE_NAME,
     timestamp: new Date().toISOString(),
     database: databaseStatus,
-      upstream_services: {
-        go_service: GO_SERVICE_URL,
-        python_service: PYTHON_SERVICE_URL,
-        csharp_risk_service: CSHARP_RISK_SERVICE_URL,
-        dotnet_service: DOTNET_SERVICE_URL,
-        auth_service: AUTH_SERVICE_URL,
-      },
+    upstream_services: {
+      go_service: GO_SERVICE_URL,
+      python_service: PYTHON_SERVICE_URL,
+      csharp_risk_service: CSHARP_RISK_SERVICE_URL,
+      dotnet_service: DOTNET_SERVICE_URL,
+      auth_service: AUTH_SERVICE_URL,
+    },
   });
 });
 
@@ -231,7 +231,7 @@ app.get('/api/v1/aggregate', authenticateToken, async (req, res) => {
         axios.get(`${GO_SERVICE_URL}/api/v1/stats`),
         axios.get(`${PYTHON_SERVICE_URL}/api/v1/metrics`),
         axios.get(`${CSHARP_RISK_SERVICE_URL}/api/v1/stats`),
-        axios.get(`${DOTNET_SERVICE_URL}/api/v1/stats`)
+        axios.get(`${DOTNET_SERVICE_URL}/api/v1/stats`),
       ]);
 
       return {
@@ -248,7 +248,7 @@ app.get('/api/v1/aggregate', authenticateToken, async (req, res) => {
           : { error: 'Service unavailable' },
         dotnet_service: dotnetResponse.status === 'fulfilled'
           ? dotnetResponse.value.data
-          : { error: 'Service unavailable' }
+          : { error: 'Service unavailable' },
       };
     }, AGGREGATE_CACHE_TTL);
 
@@ -272,7 +272,7 @@ app.get('/api/v1/go/*', async (req, res) => {
     console.error('Go service proxy error:', error.message);
     res.status(error.response?.status || 500).json({
       error: 'Go service unavailable',
-      message: error.message
+      message: error.message,
     });
   }
 });
@@ -286,7 +286,7 @@ app.post('/api/v1/go/*', authenticateToken, async (req, res) => {
     console.error('Go service proxy error:', error.message);
     res.status(error.response?.status || 500).json({
       error: 'Go service unavailable',
-      message: error.message
+      message: error.message,
     });
   }
 });
@@ -333,7 +333,7 @@ app.get('/api/v1/python/*', authenticateToken, async (req, res) => {
     console.error('Python service proxy error:', error.message);
     res.status(error.response?.status || 500).json({
       error: 'Python service unavailable',
-      message: error.message
+      message: error.message,
     });
   }
 });
@@ -347,7 +347,7 @@ app.post('/api/v1/python/*', authenticateToken, async (req, res) => {
     console.error('Python service proxy error:', error.message);
     res.status(error.response?.status || 500).json({
       error: 'Python service unavailable',
-      message: error.message
+      message: error.message,
     });
   }
 });
@@ -390,7 +390,7 @@ app.post('/api/v1/process-transaction', authenticateToken, async (req, res) => {
     console.error('Transaction processing error:', error.message);
     res.status(error.response?.status || 500).json({ 
       error: 'Failed to process transaction',
-      message: error.message 
+      message: error.message, 
     });
   }
 });
@@ -406,7 +406,7 @@ app.get('/api/v1/analyze', authenticateToken, async (req, res) => {
     console.error('Analytics error:', error.message);
     res.status(error.response?.status || 500).json({ 
       error: 'Failed to analyze transactions',
-      message: error.message 
+      message: error.message, 
     });
   }
 });
@@ -419,7 +419,7 @@ app.post('/api/v1/analyze', authenticateToken, async (req, res) => {
     console.error('Analytics error:', error.message);
     res.status(error.response?.status || 500).json({ 
       error: 'Failed to analyze transactions',
-      message: error.message 
+      message: error.message, 
     });
   }
 });
@@ -435,7 +435,7 @@ app.get('/api/v1/report', authenticateToken, async (req, res) => {
     console.error('Report generation error:', error.message);
     res.status(error.response?.status || 500).json({ 
       error: 'Failed to generate report',
-      message: error.message 
+      message: error.message, 
     });
   }
 });
@@ -451,7 +451,7 @@ app.post('/api/v1/calculate-risk', authenticateToken, async (req, res) => {
     console.error('Risk calculation error:', error.message);
     res.status(error.response?.status || 500).json({ 
       error: 'Failed to calculate risk',
-      message: error.message 
+      message: error.message, 
     });
   }
 });
@@ -468,7 +468,7 @@ app.get('/api/v1/csharp-risk/*', authenticateToken, async (req, res) => {
     console.error('C# Risk service proxy error:', error.message);
     res.status(error.response?.status || 500).json({
       error: 'C# Risk service unavailable',
-      message: error.message
+      message: error.message,
     });
   }
 });
@@ -482,7 +482,7 @@ app.post('/api/v1/csharp-risk/*', authenticateToken, async (req, res) => {
     console.error('C# Risk service proxy error:', error.message);
     res.status(error.response?.status || 500).json({
       error: 'C# Risk service unavailable',
-      message: error.message
+      message: error.message,
     });
   }
 });
@@ -498,7 +498,7 @@ app.post('/api/v1/inventory/check', authenticateToken, async (req, res) => {
     console.error('Inventory check error:', error.message);
     res.status(error.response?.status || 500).json({ 
       error: 'Failed to check inventory',
-      message: error.message 
+      message: error.message, 
     });
   }
 });
@@ -515,7 +515,7 @@ app.get('/api/v1/dotnet/*', authenticateToken, async (req, res) => {
     console.error('.NET service proxy error:', error.message);
     res.status(error.response?.status || 500).json({
       error: '.NET service unavailable',
-      message: error.message
+      message: error.message,
     });
   }
 });
@@ -529,7 +529,7 @@ app.post('/api/v1/dotnet/*', authenticateToken, async (req, res) => {
     console.error('.NET service proxy error:', error.message);
     res.status(error.response?.status || 500).json({
       error: '.NET service unavailable',
-      message: error.message
+      message: error.message,
     });
   }
 });
@@ -544,7 +544,7 @@ app.use((req, res) => {
 /**
  * Error handler
  */
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   console.error('Unhandled error:', err);
   res.status(500).json({ error: 'Internal Server Error' });
 });
