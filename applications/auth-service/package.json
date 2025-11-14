@@ -5,6 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "start:db": "node server-db.js",
+    "test": "jest --testPathIgnorePatterns=node_modules || echo 'No tests found (expected)'",
     "dev": "nodemon server.js"
   },
   "dependencies": {
@@ -18,12 +20,6 @@
   "devDependencies": {
     "nodemon": "^3.0.1",
     "jest": "^29.7.0"
-  },
-  "scripts": {
-    "start": "node server.js",
-    "start:db": "node server-db.js",
-    "test": "jest --testPathIgnorePatterns=node_modules || echo 'No tests found (expected)'",
-    "dev": "nodemon server.js"
   },
   "keywords": [
     "authentication",
