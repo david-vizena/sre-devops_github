@@ -1,8 +1,7 @@
 const { NodeSDK } = require('@opentelemetry/sdk-node');
 const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
 const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http');
-const opentelemetry = require('@opentelemetry/api');
-const { Resource } = require('@opentelemetry/resources');
+const { resourceFromAttributes } = require('@opentelemetry/resources');
 const { SemanticResourceAttributes } = require('@opentelemetry/semantic-conventions');
 
 // Jaeger collector OTLP HTTP endpoint
@@ -10,7 +9,7 @@ const JAEGER_COLLECTOR_URL = process.env.JAEGER_COLLECTOR_URL || 'http://jaeger-
 
 // Initialize OpenTelemetry SDK
 const sdk = new NodeSDK({
-  resource: new Resource({
+  resource: resourceFromAttributes({
     [SemanticResourceAttributes.SERVICE_NAME]: 'js-gateway',
     [SemanticResourceAttributes.SERVICE_VERSION]: '1.0.0',
   }),
