@@ -39,7 +39,7 @@ jobs:
           k6 run tests/load/k6-load-test.js
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: k6-load-test-results
