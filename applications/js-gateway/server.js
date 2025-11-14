@@ -9,6 +9,8 @@ require('./tracing');
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const Brakes = require('brakes');
 
 const cache = require('./lib/cache');
 const messageBus = require('./lib/messageBus');
@@ -20,6 +22,47 @@ const PORT = process.env.PORT || 8082;
 const SERVICE_NAME = process.env.SERVICE_NAME || 'js-gateway';
 const AGGREGATE_CACHE_TTL = parseInt(process.env.AGGREGATE_CACHE_TTL || '60', 10);
 const TRANSACTION_CACHE_TTL = parseInt(process.env.TRANSACTION_CACHE_TTL || '120', 10);
+
+// Rate limiting configuration
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Circuit breaker configuration for downstream services
+// Using Brakes for circuit breaking pattern (prevents cascading failures)
+// Circuit breakers will open after threshold failures and prevent requests for circuitDuration
+function createCircuitBreaker(serviceName, timeout = 5000) {
+  const breaker = new Brakes({
+    timeout,
+    circuitDuration: 60000, // 60 seconds
+    threshold: 5, // Open circuit after 5 failures
+    waitThreshold: 2,
+    statInterval: 10000, // 10 seconds
+    fallback: () => Promise.reject(new Error(`${serviceName} circuit breaker is open`)),
+  });
+
+  // Wrap axios calls with circuit breaker
+  breaker.on('circuitOpen', () => {
+    console.warn(`[circuit-breaker] ${serviceName} circuit opened`);
+  });
+
+  breaker.on('circuitClosed', () => {
+    console.log(`[circuit-breaker] ${serviceName} circuit closed`);
+  });
+
+  return breaker;
+}
+
+// Circuit breakers for downstream services (configured but not actively used yet)
+// To use: wrap axios calls with breaker.run(() => axios.get(url))
+const goServiceBreaker = createCircuitBreaker('go-service');
+const pythonServiceBreaker = createCircuitBreaker('python-service');
+const csharpRiskBreaker = createCircuitBreaker('csharp-risk-service');
+const dotnetServiceBreaker = createCircuitBreaker('dotnet-service');
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function isValidUuid(value) {
@@ -115,6 +158,9 @@ const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://localhost:8085'
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Apply rate limiting to all API routes
+app.use('/api/', apiLimiter);
 
 // Request logging middleware
 app.use((req, res, next) => {

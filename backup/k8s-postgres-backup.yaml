@@ -1,0 +1,105 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: data-services
+spec:
+  schedule: "0 2 * * *"  # Run daily at 2 AM
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: postgres-backup
+              image: postgres:15-alpine
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  apk add --no-cache postgresql-client gzip wget
+                  /scripts/backup-postgres.sh
+              env:
+                - name: POSTGRES_HOST
+                  value: "postgresql-postgresql.data-services.svc.cluster.local"
+                - name: POSTGRES_PORT
+                  value: "5432"
+                - name: POSTGRES_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgresql-secret
+                      key: username
+                - name: POSTGRES_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgresql-secret
+                      key: password
+                - name: POSTGRES_DB
+                  value: "portfolio"
+                - name: BACKUP_DIR
+                  value: "/backups"
+                - name: RETENTION_DAYS
+                  value: "7"
+              volumeMounts:
+                - name: backup-script
+                  mountPath: /scripts
+                - name: backup-storage
+                  mountPath: /backups
+              resources:
+                requests:
+                  memory: "128Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "256Mi"
+                  cpu: "200m"
+          volumes:
+            - name: backup-script
+              configMap:
+                name: postgres-backup-script
+                defaultMode: 0755
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: postgres-backup-pvc
+          restartPolicy: OnFailure
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-backup-pvc
+  namespace: data-services
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi  # Store 7 days of backups
+  storageClassName: default
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-backup-script
+  namespace: data-services
+data:
+  backup-postgres.sh: |
+    #!/bin/sh
+    set -e
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    BACKUP_FILE="/backups/postgres_${TIMESTAMP}.sql.gz"
+    
+    echo "Starting backup..."
+    PGPASSWORD="${POSTGRES_PASSWORD}" pg_dump \
+      -h "${POSTGRES_HOST}" \
+      -p "${POSTGRES_PORT}" \
+      -U "${POSTGRES_USER}" \
+      -d "${POSTGRES_DB}" \
+      --clean --if-exists --create | gzip > "${BACKUP_FILE}"
+    
+    echo "Backup completed: ${BACKUP_FILE}"
+    
+    # Cleanup old backups
+    find /backups -name "postgres_*.sql.gz" -mtime +7 -delete
+
