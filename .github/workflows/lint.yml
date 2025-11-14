@@ -54,7 +54,7 @@ jobs:
           cache-dependency-path: applications/go-service/go.sum
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v9
         with:
           version: latest
           working-directory: applications/go-service
