@@ -75,6 +75,14 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "actions/setup-dotnet"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "golangci/golangci-lint-action"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "hashicorp/setup-terraform"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "azure/setup-kubectl"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "azure/setup-helm"
+        update-types: ["version-update:semver-major"]
 
   # Enable version updates for Docker
   - package-ecosystem: "docker"
