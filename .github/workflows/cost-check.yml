@@ -16,6 +16,7 @@ jobs:
 
       - name: Azure Login
         uses: azure/login@v2
+        continue-on-error: true
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -27,11 +28,13 @@ jobs:
           sudo apt-get install -y bc
 
       - name: Check costs
+        if: success()
+        continue-on-error: true
         env:
           RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP || 'rg-sre-devops-portfolio' }}
           DAILY_THRESHOLD_USD: ${{ secrets.DAILY_COST_THRESHOLD || '5.00' }}
           MONTHLY_THRESHOLD_USD: ${{ secrets.MONTHLY_COST_THRESHOLD || '150.00' }}
         run: |
           chmod +x cost-monitoring/check-costs.sh
-          cost-monitoring/check-costs.sh || echo "Cost check failed (non-blocking)"
+          cost-monitoring/check-costs.sh || echo "Cost check failed - Azure secrets may not be configured"
 
