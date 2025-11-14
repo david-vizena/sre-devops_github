@@ -63,7 +63,7 @@ jobs:
         with:
           context: applications/${{ matrix.service }}
           platforms: linux/amd64
-          push: ${{ success() }}
+          push: ${{ github.event_name != 'pull_request' && success() }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ env.ACR_NAME }}.azurecr.io/${{ matrix.service }}:buildcache
