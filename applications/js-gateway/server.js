@@ -146,8 +146,9 @@ service_up{service="js-gateway"} 1
 
 /**
  * Auth endpoints - proxy to auth-service (no auth required for register/login)
+ * Note: Ingress strips /api prefix, so these are accessed at /v1/auth/* from ingress
  */
-app.post('/api/v1/auth/register', async (req, res) => {
+app.post('/v1/auth/register', async (req, res) => {
   try {
     const response = await axios.post(`${AUTH_SERVICE_URL}/api/v1/register`, req.body);
     res.status(response.status).json(response.data);
@@ -159,7 +160,7 @@ app.post('/api/v1/auth/register', async (req, res) => {
   }
 });
 
-app.post('/api/v1/auth/login', async (req, res) => {
+app.post('/v1/auth/login', async (req, res) => {
   try {
     const response = await axios.post(`${AUTH_SERVICE_URL}/api/v1/login`, req.body);
     res.status(response.status).json(response.data);
@@ -171,11 +172,11 @@ app.post('/api/v1/auth/login', async (req, res) => {
   }
 });
 
-app.post('/api/v1/auth/validate', authenticateToken, async (req, res) => {
+app.post('/v1/auth/validate', authenticateToken, async (req, res) => {
   res.json({ valid: true, user: req.user });
 });
 
-app.get('/api/v1/auth/me', authenticateToken, async (req, res) => {
+app.get('/v1/auth/me', authenticateToken, async (req, res) => {
   try {
     const response = await axios.get(`${AUTH_SERVICE_URL}/api/v1/me`, {
       headers: { Authorization: req.headers.authorization }
