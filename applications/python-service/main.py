@@ -16,6 +16,17 @@ from typing import Dict, Any, List
 from collections import defaultdict
 from statistics import mean, median
 
+# Initialize OpenTelemetry tracing
+try:
+    from tracing import init_tracing
+    tracer_provider = init_tracing()
+except ImportError:
+    print("Warning: OpenTelemetry packages not installed, continuing without tracing")
+    tracer_provider = None
+except Exception as e:
+    print(f"Warning: Failed to initialize tracing: {e}, continuing without tracing")
+    tracer_provider = None
+
 
 class AnalyticsHandler(BaseHTTPRequestHandler):
     """HTTP request handler for analytics endpoints"""

@@ -40,6 +40,8 @@ spec:
           value: "http://csharp-risk-service:8083"
         - name: DOTNET_SERVICE_URL
           value: "http://dotnet-service:8084"
+        - name: AUTH_SERVICE_URL
+          value: "http://auth-service:8085"
         - name: REDIS_HOST
           value: "redis-redis.data-services.svc.cluster.local"
         - name: REDIS_PORT

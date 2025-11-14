@@ -10,8 +10,27 @@ using Microsoft.Extensions.Hosting;
 using System.Threading.Tasks;
 using System.Text;
 using System.Diagnostics;
+using OpenTelemetry;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Exporter;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure OpenTelemetry tracing
+var jaegerHost = Environment.GetEnvironmentVariable("JAEGER_COLLECTOR_HOST") ?? "jaeger-query.monitoring.svc.cluster.local";
+var jaegerUrl = $"http://{jaegerHost}:4318/v1/traces";
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource
+        .AddService(serviceName: "csharp-risk-service", serviceVersion: "1.0.0"))
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddOtlpExporter(options =>
+        {
+            options.Endpoint = new Uri(jaegerUrl);
+        }));
 
 // Configure services
 builder.Services.AddControllers();
