@@ -2,6 +2,7 @@ module.exports = {
   env: {
     node: true,
     es2021: true,
+    jest: true, // Add Jest globals
   },
   extends: [
     'eslint:recommended',
@@ -12,7 +13,7 @@ module.exports = {
   },
   rules: {
     'no-console': 'warn',
-    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     'no-undef': 'error',
     'semi': ['error', 'always'],
     'quotes': ['error', 'single', { avoidEscape: true }],

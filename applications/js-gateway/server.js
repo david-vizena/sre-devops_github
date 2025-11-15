@@ -59,10 +59,14 @@ function createCircuitBreaker(serviceName, timeout = 5000) {
 
 // Circuit breakers for downstream services (configured but not actively used yet)
 // To use: wrap axios calls with breaker.run(() => axios.get(url))
-const goServiceBreaker = createCircuitBreaker('go-service');
-const pythonServiceBreaker = createCircuitBreaker('python-service');
-const csharpRiskBreaker = createCircuitBreaker('csharp-risk-service');
-const dotnetServiceBreaker = createCircuitBreaker('dotnet-service');
+// eslint-disable-next-line no-unused-vars
+const _goServiceBreaker = createCircuitBreaker('go-service');
+// eslint-disable-next-line no-unused-vars
+const _pythonServiceBreaker = createCircuitBreaker('python-service');
+// eslint-disable-next-line no-unused-vars
+const _csharpRiskBreaker = createCircuitBreaker('csharp-risk-service');
+// eslint-disable-next-line no-unused-vars
+const _dotnetServiceBreaker = createCircuitBreaker('dotnet-service');
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function isValidUuid(value) {

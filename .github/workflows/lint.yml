@@ -86,12 +86,16 @@ jobs:
       - name: Run flake8
         working-directory: applications/python-service
         continue-on-error: true
-        run: flake8 . --config=../../linting/configs/.flake8 --count --select=E9,F63,F7,F82 --show-source --statistics || echo "flake8 found issues (non-blocking)"
+        run: |
+          flake8 . --config=../../linting/configs/.flake8 --count --select=E9,F63,F7,F82 --show-source --statistics || \
+          echo "flake8 found issues (non-blocking)"
 
       - name: Check code formatting with black
         working-directory: applications/python-service
         continue-on-error: true
-        run: black --check . || echo "black found formatting issues (non-blocking)"
+        run: |
+          black --check . || \
+          echo "black found formatting issues (non-blocking)"
 
   # Terraform Validation
   lint-terraform:
@@ -137,10 +141,12 @@ jobs:
         run: |
           # Validate all YAML files except dashboard configmaps (they have large embedded JSON)
           # Dashboard configmaps are validated by kubectl apply --dry-run below
-          for file in $(find k8s \( -name "*.yaml" -o -name "*.yml" \) | grep -v "dashboard-configmap.yaml"); do
+          for file in $(find k8s \( -name "*.yaml" -o -name "*.yml" \) | \
+            grep -v "dashboard-configmap.yaml"); do
             if [ -f "$file" ]; then
               echo "Validating $file with yamllint..."
-              yamllint -c linting/configs/.yamllint.yml "$file" || echo "Warning: $file has yamllint issues (non-critical)"
+              yamllint -c linting/configs/.yamllint.yml "$file" || \
+                echo "Warning: $file has yamllint issues (non-critical)"
             fi
           done
           echo "Skipping dashboard-configmap.yaml (validated by kubectl below)"
