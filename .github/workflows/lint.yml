@@ -131,9 +131,12 @@ jobs:
       - name: Validate YAML syntax
         run: |
           # Validate all YAML files except dashboard configmaps (they have large embedded JSON)
-          find k8s -name "*.yaml" -o -name "*.yml" | grep -v "dashboard-configmap.yaml" | xargs -I {} yamllint -c linting/configs/.yamllint.yml {} || echo "Some yamllint warnings found (non-critical for dashboard files)"
-          # Check dashboard-configmap.yaml separately with less strict rules
-          yamllint -c linting/configs/.yamllint.yml -d '{extends: default, rules: {line-length: {max: 200}, indentation: {spaces: 2, indent-sequences: true}}}' k8s/grafana/dashboard-configmap.yaml || echo "Dashboard configmap has some formatting issues (non-blocking)"
+          # Dashboard configmaps are validated by kubectl apply --dry-run below
+          find k8s \( -name "*.yaml" -o -name "*.yml" \) | grep -v "dashboard-configmap.yaml" | while read file; do
+            echo "Validating $file with yamllint..."
+            yamllint -c linting/configs/.yamllint.yml "$file" || echo "Warning: $file has yamllint issues (non-critical)"
+          done
+          echo "Skipping dashboard-configmap.yaml (validated by kubectl below)"
 
       - name: Validate Kubernetes manifests
         run: |
