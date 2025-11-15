@@ -7,6 +7,580 @@ metadata:
     grafana_dashboard: "1"
 data:
   portfolio-overview.json: |
-$(cat k8s/grafana/dashboards/portfolio-overview.json | sed 's/^/    /')
+    {
+      "id": null,
+      "uid": "portfolio-overview",
+      "title": "Portfolio Overview",
+      "tags": [
+        "portfolio",
+        "operations"
+      ],
+      "timezone": "browser",
+      "schemaVersion": 38,
+      "version": 1,
+      "refresh": "30s",
+      "style": "dark",
+      "editable": true,
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "type": "datasource",
+            "label": "Prometheus",
+            "query": "prometheus",
+            "refresh": 1,
+            "current": {
+              "selected": true,
+              "text": "Prometheus",
+              "value": "Prometheus"
+            }
+          }
+        ]
+      },
+      "panels": [
+        {
+          "type": "stat",
+          "title": "Total Transactions",
+          "description": "Total number of transactions processed by go-service",
+          "datasource": "$datasource",
+          "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "min": 0,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "http_requests_total{service=\"go-service\"}",
+              "legendFormat": "Transactions",
+              "instant": false,
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            }
+          }
+        },
+        {
+          "type": "stat",
+          "title": "Total Revenue",
+          "description": "Total revenue processed",
+          "datasource": "$datasource",
+          "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "min": 0,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "service_revenue_total{service=\"go-service\"} or sum(http_requests_total{service=\"go-service\"}) * 100",
+              "legendFormat": "Revenue",
+              "instant": false,
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            }
+          }
+        },
+        {
+          "type": "stat",
+          "title": "Services Running",
+          "description": "Number of services currently running",
+          "datasource": "$datasource",
+          "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "min": 0,
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "orange", "value": 1 },
+                  { "color": "green", "value": 2 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "count(service_up == 1)",
+              "legendFormat": "Services",
+              "instant": false,
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            }
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Service Status Over Time",
+          "description": "Service health status (1 = up, 0 = down)",
+          "datasource": "$datasource",
+          "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "min": 0,
+              "max": 1,
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "service_up",
+              "legendFormat": "{{service}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "single"
+            },
+            "legend": {
+              "displayMode": "table",
+              "placement": "right"
+            }
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Total Requests Over Time",
+          "description": "Total requests processed by each service",
+          "datasource": "$datasource",
+          "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "min": 0,
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "http_requests_total",
+              "legendFormat": "{{service}}",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "single"
+            },
+            "legend": {
+              "displayMode": "table",
+              "placement": "right"
+            }
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "Total Revenue Over Time",
+          "description": "Total revenue processed by service",
+          "datasource": "$datasource",
+          "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyUSD",
+              "min": 0,
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum by (service) (http_requests_total) * 100",
+              "legendFormat": "{{service}} Revenue Estimate",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "single"
+            },
+            "legend": {
+              "displayMode": "table",
+              "placement": "right"
+            }
+          }
+        },
+        {
+          "type": "table",
+          "title": "Service Metrics Summary",
+          "description": "Current metrics for all services",
+          "datasource": "$datasource",
+          "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+          "targets": [
+            {
+              "expr": "http_requests_total",
+              "legendFormat": "{{service}}",
+              "refId": "A",
+              "format": "table",
+              "instant": false
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "app": true,
+                  "instance": true,
+                  "job": true,
+                  "kubernetes_namespace": true,
+                  "kubernetes_service_name": true,
+                  "monitoring": true,
+                  "method": true
+                },
+                "indexByName": {
+                  "Value": 2,
+                  "service": 1
+                },
+                "renameByName": {
+                  "Value": "Total Requests",
+                  "service": "Service"
+                }
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "displayMode": "auto"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "showHeader": true,
+            "footer": {
+              "show": false
+            }
+          }
+        }
+      ]
+    }
   analytics-pipeline.json: |
-$(cat k8s/grafana/dashboards/analytics-pipeline.json | sed 's/^/    /')
+    {
+      "id": null,
+      "uid": "analytics-pipeline",
+      "title": "Analytics Pipeline",
+      "tags": [
+        "analytics",
+        "portfolio"
+      ],
+      "timezone": "browser",
+      "schemaVersion": 38,
+      "version": 1,
+      "refresh": "30s",
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "type": "datasource",
+            "label": "Prometheus",
+            "query": "prometheus",
+            "refresh": 1,
+            "current": {
+              "selected": true,
+              "text": "Prometheus",
+              "value": "Prometheus"
+            }
+          }
+        ]
+      },
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Transactions Submitted",
+          "datasource": "$datasource",
+          "description": "Rate of transactions entering the system via the API gateway.",
+          "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "req/s",
+              "min": 0
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{path=\"/api/v1/process-transaction\"}[$__rate_interval]))",
+              "legendFormat": "Process transaction"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Gateway Cache Hit Ratio",
+          "datasource": "$datasource",
+          "description": "Effectiveness of Redis caching for transaction lookups.",
+          "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(redis_keyspace_hits_total[$__rate_interval])) / clamp_min(sum(rate(redis_keyspace_hits_total[$__rate_interval]) + rate(redis_keyspace_misses_total[$__rate_interval])), 1)",
+              "legendFormat": "Cache hit ratio"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "RabbitMQ Queue Depth",
+          "datasource": "$datasource",
+          "description": "Outstanding analytics events waiting to be processed.",
+          "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "min": 0
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "max(rabbitmq_queue_messages_ready{queue=\"analytics.events\"})",
+              "legendFormat": "Messages ready"
+            },
+            {
+              "expr": "max(rabbitmq_queue_messages_unacknowledged{queue=\"analytics.events\"})",
+              "legendFormat": "Unacked"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Worker Throughput",
+          "datasource": "$datasource",
+          "description": "Messages acknowledged by the analytics worker.",
+          "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "msg/s",
+              "min": 0
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(rabbitmq_queue_messages_acked_total{queue=\"analytics.events\"}[$__rate_interval]))",
+              "legendFormat": "Acked"
+            },
+            {
+              "expr": "sum(rate(rabbitmq_queue_messages_published_total{queue=\"analytics.events\"}[$__rate_interval]))",
+              "legendFormat": "Published"
+            }
+          ]
+        },
+        {
+          "type": "stat",
+          "title": "Worker Restarts (1h)",
+          "datasource": "$datasource",
+          "description": "Container restarts for the analytics worker in the last hour.",
+          "gridPos": { "x": 0, "y": 16, "w": 6, "h": 4 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "orange", "value": 1 },
+                  { "color": "red", "value": 3 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"default\", pod=~\"python-service-worker.*\"}[1h]))",
+              "legendFormat": "Restarts"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            }
+          }
+        },
+        {
+          "type": "table",
+          "title": "Recent Analytics Output",
+          "datasource": "$datasource",
+          "description": "Latest analytics document timestamps as observed in MongoDB sync metrics.",
+          "gridPos": { "x": 6, "y": 16, "w": 18, "h": 4 },
+          "targets": [
+            {
+              "expr": "topk(5, max by (transaction_id) (mongodb_collection_last_update_timestamp_seconds{collection=\"transactions_summary\"}))",
+              "legendFormat": "{{transaction_id}}"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "labelsToFields",
+              "options": {
+                "mode": "columns"
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "renameByName": {
+                  "Value": "Last Update (s)",
+                  "transaction_id": "Transaction ID"
+                }
+              }
+            }
+          ],
+          "options": {
+            "showHeader": true
+          }
+        }
+      ]
+    }
