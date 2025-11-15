@@ -28,7 +28,7 @@ spec:
           - |
             cat > /vault/config/vault-agent.hcl <<EOF
             pid_file = "/tmp/vault-agent.pid"
-            
+
             auto_auth {
               method "kubernetes" {
                 mount_path = "auth/kubernetes"
@@ -36,25 +36,25 @@ spec:
                   role = "go-service"
                 }
               }
-              
+
               sink "file" {
                 config = {
                   path = "/tmp/vault-token"
                 }
               }
             }
-            
+
             template {
               source      = "/vault/secrets/secrets.tpl"
               destination = "/vault/secrets/secrets.env"
               command     = ""
             }
-            
+
             vault {
               address = "http://vault.monitoring.svc.cluster.local:8200"
             }
             EOF
-            
+
             cat > /vault/secrets/secrets.tpl <<EOF
             {{- with secret "secret/data/shared/postgresql" }}
             POSTGRES_DB={{ .Data.data.app-database }}

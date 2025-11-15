@@ -10,9 +10,9 @@ data:
   vault-agent.hcl: |
     # Vault Agent configuration for sidecar injection
     # This configuration tells Vault Agent how to authenticate and fetch secrets
-    
+
     pid_file = "/tmp/vault-agent.pid"
-    
+
     # Auto-auth configuration
     auto_auth {
       method "kubernetes" {
@@ -21,26 +21,26 @@ data:
           role = "SERVICE_ROLE"  # This will be replaced per service
         }
       }
-      
+
       sink "file" {
         config = {
           path = "/tmp/vault-token"
         }
       }
     }
-    
+
     # Cache configuration
     cache {
       use_auto_auth_token = true
     }
-    
+
     # Template configuration for secret rendering
     template {
       source      = "/vault/secrets/secrets.tpl"
       destination = "/vault/secrets/secrets.env"
       command     = "/bin/sh -c 'source /vault/secrets/secrets.env && exec /bin/sh'"
     }
-    
+
     # Vault address
     vault {
       address = "http://vault-vault.data-services.svc.cluster.local:8200"

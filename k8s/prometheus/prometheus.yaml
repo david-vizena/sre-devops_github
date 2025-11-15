@@ -51,18 +51,18 @@ data:
       external_labels:
         cluster: 'aks-sre-devops'
         environment: 'production'
-    
+
     # Alertmanager configuration
     alerting:
       alertmanagers:
         - static_configs:
             - targets:
                 - alertmanager.monitoring.svc.cluster.local:9093
-    
+
     # Alert rules
     rule_files:
       - '/etc/prometheus/rules/*.yaml'
-    
+
     scrape_configs:
       # Scrape Kubernetes pods with metrics endpoint
       - job_name: 'kubernetes-pods'
@@ -89,7 +89,7 @@ data:
         - source_labels: [__meta_kubernetes_pod_name]
           action: replace
           target_label: kubernetes_pod_name
-      
+
       # Direct service scraping (for services with /metrics endpoint)
       - job_name: 'portfolio-services'
         kubernetes_sd_configs:

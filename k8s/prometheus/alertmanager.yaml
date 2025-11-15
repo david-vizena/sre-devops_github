@@ -68,7 +68,7 @@ data:
       # In production, configure email/Slack/PagerDuty here
       # slack_api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
       # pagerduty_url: 'https://events.pagerduty.com/v2/enqueue'
-    
+
     route:
       group_by: ['alertname', 'severity']
       group_wait: 10s
@@ -83,13 +83,13 @@ data:
         - match:
             severity: warning
           receiver: 'warning'
-    
+
     receivers:
       - name: 'default'
         webhook_configs:
           - url: 'http://localhost:5001/webhook'
             send_resolved: true
-      
+
       - name: 'critical'
         webhook_configs:
           - url: 'http://localhost:5001/webhook'
@@ -100,7 +100,7 @@ data:
         #     smarthost: 'smtp.example.com:587'
         #     auth_username: 'alertmanager@example.com'
         #     auth_password: 'password'
-      
+
       - name: 'warning'
         webhook_configs:
           - url: 'http://localhost:5001/webhook'

@@ -5,7 +5,7 @@ groups:
       # High Error Rate Alert
       - alert: HighErrorRate
         expr: |
-          sum(rate(http_requests_total{status=~"5.."}[5m])) by (service) / 
+          sum(rate(http_requests_total{status=~"5.."}[5m])) by (service) /
           sum(rate(http_requests_total[5m])) by (service) > 0.05
         for: 5m
         labels:
@@ -17,7 +17,7 @@ groups:
       # High Latency Alert
       - alert: HighLatency
         expr: |
-          histogram_quantile(0.95, 
+          histogram_quantile(0.95,
             sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)
           ) > 0.5
         for: 5m
@@ -40,7 +40,7 @@ groups:
       # High Memory Usage
       - alert: HighMemoryUsage
         expr: |
-          (container_memory_usage_bytes{container!="POD",container!=""} / 
+          (container_memory_usage_bytes{container!="POD",container!=""} /
            container_spec_memory_limit_bytes) > 0.9
         for: 5m
         labels:
@@ -74,7 +74,7 @@ groups:
       # SLO Violation - Availability
       - alert: SLOViolationAvailability
         expr: |
-          (sum(rate(http_requests_total[24h])) - sum(rate(http_requests_total{status=~"5.."}[24h]))) / 
+          (sum(rate(http_requests_total[24h])) - sum(rate(http_requests_total{status=~"5.."}[24h]))) /
           sum(rate(http_requests_total[24h])) < 0.999
         for: 1h
         labels:
@@ -86,7 +86,7 @@ groups:
       # SLO Violation - Error Rate
       - alert: SLOViolationErrorRate
         expr: |
-          sum(rate(http_requests_total{status=~"5.."}[5m])) / 
+          sum(rate(http_requests_total{status=~"5.."}[5m])) /
           sum(rate(http_requests_total[5m])) > 0.001
         for: 5m
         labels:

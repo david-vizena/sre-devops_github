@@ -29,11 +29,11 @@ spec:
           - |
             cat > /vault/config/vault-agent.hcl <<EOF
             pid_file = "/tmp/vault-agent.pid"
-            
+
             vault {
               address = "http://vault.monitoring.svc.cluster.local:8200"
             }
-            
+
             auto_auth {
               method "kubernetes" {
                 mount_path = "auth/kubernetes"
@@ -41,21 +41,21 @@ spec:
                   role = "js-gateway"
                 }
               }
-              
+
               sink "file" {
                 config = {
                   path = "/tmp/vault-token"
                 }
               }
             }
-            
+
             template {
               source      = "/vault/secrets/secrets.tpl"
               destination = "/vault/secrets/secrets.env"
               command     = ""
             }
             EOF
-            
+
             cat > /vault/secrets/secrets.tpl <<EOF
             {{- with secret "secret/data/js-gateway" }}
             REDIS_PASSWORD={{ .Data.data.redis_password }}

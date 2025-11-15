@@ -14,7 +14,7 @@ data:
       # smtp_from: 'alertmanager@example.com'
       # smtp_auth_username: 'alertmanager@example.com'
       # smtp_auth_password: 'your-password'
-    
+
     route:
       group_by: ['alertname', 'severity', 'cluster']
       group_wait: 10s
@@ -29,7 +29,7 @@ data:
         - match:
             severity: warning
           receiver: 'warning'
-    
+
     receivers:
       - name: 'default'
         # Log to stdout for debugging (replace with actual notification channel)
@@ -38,7 +38,7 @@ data:
             send_resolved: true
             http_config:
               follow_redirects: true
-      
+
       - name: 'critical'
         # Uncomment and configure for production
         # email_configs:
@@ -61,7 +61,7 @@ data:
         webhook_configs:
           - url: 'http://localhost:5001/webhook'
             send_resolved: true
-      
+
       - name: 'warning'
         # Uncomment and configure for production
         # email_configs:
