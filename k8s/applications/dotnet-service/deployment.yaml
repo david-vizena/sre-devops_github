@@ -17,6 +17,7 @@ spec:
         app: dotnet-service
         version: v1
     spec:
+      terminationGracePeriodSeconds: 30
       imagePullSecrets:
       - name: acr-secret
       containers:

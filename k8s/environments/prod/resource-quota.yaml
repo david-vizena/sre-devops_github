@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: prod-resource-quota
+  namespace: prod
+spec:
+  hard:
+    requests.cpu: "8"
+    requests.memory: 16Gi
+    limits.cpu: "16"
+    limits.memory: 32Gi
+    persistentvolumeclaims: "8"
+    services.loadbalancers: "4"
+    services.nodeports: "20"
+
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: prod-limit-range
+  namespace: prod
+spec:
+  limits:
+  - default:
+      cpu: "500m"
+      memory: "512Mi"
+    defaultRequest:
+      cpu: "100m"
+      memory: "256Mi"
+    type: Container
+

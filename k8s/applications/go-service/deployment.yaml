@@ -17,6 +17,7 @@ spec:
         app: go-service
         version: v1
     spec:
+      terminationGracePeriodSeconds: 30
       imagePullSecrets:
       - name: acr-secret
       containers:
@@ -54,7 +55,7 @@ spec:
               name: postgresql-postgresql
               key: app-password
         - name: POSTGRES_SSLMODE
-          value: "disable"
+          value: "require"
         - name: POSTGRES_MAX_CONNS
           value: "4"
         livenessProbe:

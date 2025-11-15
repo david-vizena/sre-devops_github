@@ -17,6 +17,7 @@ spec:
         app: react-frontend
         version: v1
     spec:
+      terminationGracePeriodSeconds: 30
       imagePullSecrets:
       - name: acr-secret
       containers:
