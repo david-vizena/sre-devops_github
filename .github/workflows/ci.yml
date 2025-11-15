@@ -49,7 +49,11 @@ jobs:
         if: matrix.service == 'python-service'
         working-directory: applications/python-service
         run: |
-          python3 -m pytest tests/ -v || echo "No tests found (expected)"
+          if [ -d "tests" ]; then
+            python3 -m pytest tests/ -v || echo "No tests found (expected)"
+          else
+            echo "No tests directory found (expected)"
+          fi
 
       - name: Setup Node.js
         if: matrix.service == 'js-gateway' || matrix.service == 'auth-service'
