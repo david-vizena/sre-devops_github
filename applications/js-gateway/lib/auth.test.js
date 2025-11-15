@@ -1,7 +1,6 @@
-const { authenticateToken, optionalAuth } = require('./auth');
+const { authenticateToken } = require('./auth');
 
 // Mock jwt
-const jwt = require('jsonwebtoken');
 jest.mock('jsonwebtoken');
 
 describe('Auth Middleware', () => {
