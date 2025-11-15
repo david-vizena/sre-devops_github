@@ -1,6 +1,6 @@
 # End-to-End Test Results
 
-**Date:** $(date +%Y-%m-%d)  
+**Date:** 2024-11-14  
 **Cluster:** sre-devops-k1v553ot.hcp.eastus.azmk8s.io  
 **Ingress IP:** 20.241.246.50
 
