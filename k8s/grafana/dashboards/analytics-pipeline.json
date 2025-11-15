@@ -30,95 +30,94 @@
     ]
   },
   "panels": [
-    {
-      "type": "timeseries",
-      "title": "Transactions Submitted",
-      "datasource": "$datasource",
-      "description": "Rate of transactions entering the system via the API gateway.",
-      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "req/s",
-          "min": 0
-        },
-        "overrides": []
-      },
-      "targets": [
         {
-          "expr": "sum(rate(http_requests_total{path=\"/api/v1/process-transaction\"}[$__rate_interval]))",
-          "legendFormat": "Process transaction"
-        }
-      ]
-    },
-    {
-      "type": "timeseries",
-      "title": "Gateway Cache Hit Ratio",
-      "datasource": "$datasource",
-      "description": "Effectiveness of Redis caching for transaction lookups.",
-      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percentunit",
-          "min": 0,
-          "max": 1
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "expr": "sum(rate(redis_keyspace_hits_total[$__rate_interval])) / clamp_min(sum(rate(redis_keyspace_hits_total[$__rate_interval]) + rate(redis_keyspace_misses_total[$__rate_interval])), 1)",
-          "legendFormat": "Cache hit ratio"
-        }
-      ]
-    },
-    {
-      "type": "timeseries",
-      "title": "RabbitMQ Queue Depth",
-      "datasource": "$datasource",
-      "description": "Outstanding analytics events waiting to be processed.",
-      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "min": 0
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "expr": "max(rabbitmq_queue_messages_ready{queue=\"analytics.events\"})",
-          "legendFormat": "Messages ready"
+          "type": "timeseries",
+          "title": "Transactions Submitted",
+          "datasource": "$datasource",
+          "description": "Rate of transactions entering the system via the API gateway.",
+          "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "req/s",
+              "min": 0
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{service=\"js-gateway\"}[$__rate_interval]))",
+              "legendFormat": "API Gateway Requests"
+            },
+            {
+              "expr": "sum(rate(http_requests_total{service=\"go-service\"}[$__rate_interval]))",
+              "legendFormat": "Transaction Processing"
+            }
+          ]
         },
         {
-          "expr": "max(rabbitmq_queue_messages_unacknowledged{queue=\"analytics.events\"})",
-          "legendFormat": "Unacked"
-        }
-      ]
-    },
-    {
-      "type": "timeseries",
-      "title": "Worker Throughput",
-      "datasource": "$datasource",
-      "description": "Messages acknowledged by the analytics worker.",
-      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "msg/s",
-          "min": 0
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "expr": "sum(rate(rabbitmq_queue_messages_acked_total{queue=\"analytics.events\"}[$__rate_interval]))",
-          "legendFormat": "Acked"
+          "type": "timeseries",
+          "title": "Transaction Processing Rate",
+          "datasource": "$datasource",
+          "description": "Rate of transactions being processed by go-service.",
+          "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "req/s",
+              "min": 0
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{service=\"go-service\"}[$__rate_interval]))",
+              "legendFormat": "Transaction Processing Rate"
+            }
+          ]
         },
         {
-          "expr": "sum(rate(rabbitmq_queue_messages_published_total{queue=\"analytics.events\"}[$__rate_interval]))",
-          "legendFormat": "Published"
-        }
-      ]
-    },
+          "type": "timeseries",
+          "title": "Analytics Service Request Rate",
+          "datasource": "$datasource",
+          "description": "Request rate for analytics pipeline services.",
+          "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "req/s",
+              "min": 0
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{service=\"python-service\"}[$__rate_interval]))",
+              "legendFormat": "Analytics Requests"
+            },
+            {
+              "expr": "sum(rate(http_requests_total{service=\"js-gateway\"}[$__rate_interval]))",
+              "legendFormat": "Gateway Requests"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Service Throughput",
+          "datasource": "$datasource",
+          "description": "Request throughput across all services in the pipeline.",
+          "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "req/s",
+              "min": 0
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum by (service) (rate(http_requests_total[$__rate_interval]))",
+              "legendFormat": "{{service}}"
+            }
+          ]
+        },
     {
       "type": "stat",
       "title": "Worker Restarts (1h)",
@@ -139,12 +138,16 @@
         },
         "overrides": []
       },
-      "targets": [
-        {
-          "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"default\", pod=~\"python-service-worker.*\"}[1h]))",
-          "legendFormat": "Restarts"
-        }
-      ],
+          "targets": [
+            {
+              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"default\", pod=~\"python-service.*\"}[1h]))",
+              "legendFormat": "Python Service Restarts"
+            },
+            {
+              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"default\"}[1h]))",
+              "legendFormat": "Total Restarts"
+            }
+          ],
       "options": {
         "reduceOptions": {
           "calcs": ["lastNotNull"],
@@ -157,31 +160,37 @@
       "type": "table",
       "title": "Recent Analytics Output",
       "datasource": "$datasource",
-      "description": "Latest analytics document timestamps as observed in MongoDB sync metrics.",
-      "gridPos": { "x": 6, "y": 16, "w": 18, "h": 4 },
-      "targets": [
-        {
-          "expr": "topk(5, max by (transaction_id) (mongodb_collection_last_update_timestamp_seconds{collection=\"transactions_summary\"}))",
-          "legendFormat": "{{transaction_id}}"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "labelsToFields",
-          "options": {
-            "mode": "columns"
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "renameByName": {
-              "Value": "Last Update (s)",
-              "transaction_id": "Transaction ID"
+          "description": "Service health status - which services are up/down.",
+          "gridPos": { "x": 6, "y": 16, "w": 18, "h": 4 },
+          "targets": [
+            {
+              "expr": "service_up",
+              "legendFormat": "{{service}}",
+              "instant": true,
+              "format": "table"
             }
-          }
-        }
-      ],
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "instance": true,
+                  "job": true
+                },
+                "indexByName": {
+                  "Value": 2,
+                  "service": 1
+                },
+                "renameByName": {
+                  "Value": "Status (1=Up)",
+                  "service": "Service"
+                }
+              }
+            }
+          ],
       "options": {
         "showHeader": true
       }

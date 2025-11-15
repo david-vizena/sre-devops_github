@@ -441,8 +441,12 @@ data:
           },
           "targets": [
             {
-              "expr": "sum(rate(http_requests_total{path=\"/api/v1/process-transaction\"}[$__rate_interval]))",
-              "legendFormat": "Process transaction"
+              "expr": "sum(rate(http_requests_total{service=\"js-gateway\"}[$__rate_interval]))",
+              "legendFormat": "API Gateway Requests"
+            },
+            {
+              "expr": "sum(rate(http_requests_total{service=\"go-service\"}[$__rate_interval]))",
+              "legendFormat": "Transaction Processing"
             }
           ]
         },
@@ -462,8 +466,8 @@ data:
           },
           "targets": [
             {
-              "expr": "sum(rate(redis_keyspace_hits_total[$__rate_interval])) / clamp_min(sum(rate(redis_keyspace_hits_total[$__rate_interval]) + rate(redis_keyspace_misses_total[$__rate_interval])), 1)",
-              "legendFormat": "Cache hit ratio"
+              "expr": "sum(rate(http_requests_total{service=\"go-service\"}[$__rate_interval])) / clamp_min(sum(rate(http_requests_total{service=\"js-gateway\"}[$__rate_interval])), 0.001)",
+              "legendFormat": "Transaction Processing Rate"
             }
           ]
         },
@@ -471,23 +475,23 @@ data:
           "type": "timeseries",
           "title": "RabbitMQ Queue Depth",
           "datasource": "$datasource",
-          "description": "Outstanding analytics events waiting to be processed.",
+          "description": "Analytics service request rate over time.",
           "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
           "fieldConfig": {
             "defaults": {
-              "unit": "short",
+              "unit": "req/s",
               "min": 0
             },
             "overrides": []
           },
           "targets": [
             {
-              "expr": "max(rabbitmq_queue_messages_ready{queue=\"analytics.events\"})",
-              "legendFormat": "Messages ready"
+              "expr": "sum(rate(http_requests_total{service=\"python-service\"}[$__rate_interval]))",
+              "legendFormat": "Analytics Requests"
             },
             {
-              "expr": "max(rabbitmq_queue_messages_unacknowledged{queue=\"analytics.events\"})",
-              "legendFormat": "Unacked"
+              "expr": "sum(rate(http_requests_total{service=\"js-gateway\"}[$__rate_interval]))",
+              "legendFormat": "Gateway Requests"
             }
           ]
         },
@@ -495,23 +499,19 @@ data:
           "type": "timeseries",
           "title": "Worker Throughput",
           "datasource": "$datasource",
-          "description": "Messages acknowledged by the analytics worker.",
+          "description": "Service throughput - requests per second by service.",
           "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
           "fieldConfig": {
             "defaults": {
-              "unit": "msg/s",
+              "unit": "req/s",
               "min": 0
             },
             "overrides": []
           },
           "targets": [
             {
-              "expr": "sum(rate(rabbitmq_queue_messages_acked_total{queue=\"analytics.events\"}[$__rate_interval]))",
-              "legendFormat": "Acked"
-            },
-            {
-              "expr": "sum(rate(rabbitmq_queue_messages_published_total{queue=\"analytics.events\"}[$__rate_interval]))",
-              "legendFormat": "Published"
+              "expr": "sum by (service) (rate(http_requests_total[$__rate_interval]))",
+              "legendFormat": "{{service}}"
             }
           ]
         },
@@ -537,8 +537,12 @@ data:
           },
           "targets": [
             {
-              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"default\", pod=~\"python-service-worker.*\"}[1h]))",
-              "legendFormat": "Restarts"
+              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"default\", pod=~\"python-service.*\"}[1h]))",
+              "legendFormat": "Python Service Restarts"
+            },
+            {
+              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"default\"}[1h]))",
+              "legendFormat": "Total Restarts"
             }
           ],
           "options": {
@@ -553,27 +557,33 @@ data:
           "type": "table",
           "title": "Recent Analytics Output",
           "datasource": "$datasource",
-          "description": "Latest analytics document timestamps as observed in MongoDB sync metrics.",
+          "description": "Service health status - which services are up/down.",
           "gridPos": { "x": 6, "y": 16, "w": 18, "h": 4 },
           "targets": [
             {
-              "expr": "topk(5, max by (transaction_id) (mongodb_collection_last_update_timestamp_seconds{collection=\"transactions_summary\"}))",
-              "legendFormat": "{{transaction_id}}"
+              "expr": "service_up",
+              "legendFormat": "{{service}}",
+              "instant": true,
+              "format": "table"
             }
           ],
           "transformations": [
             {
-              "id": "labelsToFields",
-              "options": {
-                "mode": "columns"
-              }
-            },
-            {
               "id": "organize",
               "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "instance": true,
+                  "job": true
+                },
+                "indexByName": {
+                  "Value": 2,
+                  "service": 1
+                },
                 "renameByName": {
-                  "Value": "Last Update (s)",
-                  "transaction_id": "Transaction ID"
+                  "Value": "Status (1=Up)",
+                  "service": "Service"
                 }
               }
             }
