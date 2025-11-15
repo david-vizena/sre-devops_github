@@ -126,7 +126,7 @@ data:
             },
             "targets": [
                 {
-                    "expr": "service_revenue_total{service=\"go-service\"}",
+                    "expr": "service_revenue_total{service=\"go-service\"} or sum(http_requests_total{service=\"go-service\"}) * 100",
                     "legendFormat": "Revenue",
                     "instant": false,
                     "refId": "A"
