@@ -8,3 +8,5 @@ metadata:
 data:
   portfolio-overview.json: |
 $(cat k8s/grafana/dashboards/portfolio-overview.json | sed 's/^/    /')
+  analytics-pipeline.json: |
+$(cat k8s/grafana/dashboards/analytics-pipeline.json | sed 's/^/    /')
