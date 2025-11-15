@@ -414,7 +414,6 @@ data:
           {
             "name": "datasource",
             "type": "datasource",
-            "label": "Prometheus",
             "query": "prometheus",
             "refresh": 1,
             "current": {
@@ -431,7 +430,12 @@ data:
           "title": "Transactions Submitted",
           "datasource": "$datasource",
           "description": "Rate of transactions entering the system via the API gateway.",
-          "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          },
           "fieldConfig": {
             "defaults": {
               "unit": "req/s",
@@ -452,31 +456,40 @@ data:
         },
         {
           "type": "timeseries",
-          "title": "Gateway Cache Hit Ratio",
+          "title": "Transaction Processing Rate",
           "datasource": "$datasource",
-          "description": "Effectiveness of Redis caching for transaction lookups.",
-          "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+          "description": "Rate of transactions being processed by go-service.",
+          "gridPos": {
+            "x": 12,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          },
           "fieldConfig": {
             "defaults": {
-              "unit": "percentunit",
-              "min": 0,
-              "max": 1
+              "unit": "req/s",
+              "min": 0
             },
             "overrides": []
           },
           "targets": [
             {
-              "expr": "sum(rate(http_requests_total{service=\"go-service\"}[$__rate_interval])) / clamp_min(sum(rate(http_requests_total{service=\"js-gateway\"}[$__rate_interval])), 0.001)",
+              "expr": "sum(rate(http_requests_total{service=\"go-service\"}[$__rate_interval]))",
               "legendFormat": "Transaction Processing Rate"
             }
           ]
         },
         {
           "type": "timeseries",
-          "title": "RabbitMQ Queue Depth",
+          "title": "Analytics Service Request Rate",
           "datasource": "$datasource",
-          "description": "Analytics service request rate over time.",
-          "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+          "description": "Request rate for analytics pipeline services.",
+          "gridPos": {
+            "x": 0,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          },
           "fieldConfig": {
             "defaults": {
               "unit": "req/s",
@@ -497,10 +510,15 @@ data:
         },
         {
           "type": "timeseries",
-          "title": "Worker Throughput",
+          "title": "Service Throughput",
           "datasource": "$datasource",
-          "description": "Service throughput - requests per second by service.",
-          "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+          "description": "Request throughput across all services in the pipeline.",
+          "gridPos": {
+            "x": 12,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          },
           "fieldConfig": {
             "defaults": {
               "unit": "req/s",
@@ -520,16 +538,30 @@ data:
           "title": "Worker Restarts (1h)",
           "datasource": "$datasource",
           "description": "Container restarts for the analytics worker in the last hour.",
-          "gridPos": { "x": 0, "y": 16, "w": 6, "h": 4 },
+          "gridPos": {
+            "x": 0,
+            "y": 16,
+            "w": 6,
+            "h": 4
+          },
           "fieldConfig": {
             "defaults": {
               "unit": "short",
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
-                  { "color": "green", "value": null },
-                  { "color": "orange", "value": 1 },
-                  { "color": "red", "value": 3 }
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 3
+                  }
                 ]
               }
             },
@@ -547,7 +579,9 @@ data:
           ],
           "options": {
             "reduceOptions": {
-              "calcs": ["lastNotNull"],
+              "calcs": [
+                "lastNotNull"
+              ],
               "fields": "",
               "values": false
             }
@@ -558,7 +592,12 @@ data:
           "title": "Recent Analytics Output",
           "datasource": "$datasource",
           "description": "Service health status - which services are up/down.",
-          "gridPos": { "x": 6, "y": 16, "w": 18, "h": 4 },
+          "gridPos": {
+            "x": 6,
+            "y": 16,
+            "w": 18,
+            "h": 4
+          },
           "targets": [
             {
               "expr": "service_up",
