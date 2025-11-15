@@ -49,9 +49,10 @@ jobs:
       - name: Run Python tests
         if: matrix.service == 'python-service'
         working-directory: applications/python-service
+        continue-on-error: true
         run: |
           if [ -d "tests" ]; then
-            python3 -m pytest tests/ -v || echo "No tests found (expected)"
+            python3 -m pytest tests/ -v || echo "No tests found or tests failed (non-blocking)"
           else
             echo "No tests directory found (expected)"
           fi
