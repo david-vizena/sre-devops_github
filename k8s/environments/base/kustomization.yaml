@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: default
+
+resources:
+  # Import all application resources
+  - ../../applications/go-service/deployment.yaml
+  - ../../applications/go-service/service.yaml
+  - ../../applications/python-service/deployment.yaml
+  - ../../applications/python-service/service.yaml
+  - ../../applications/js-gateway/deployment.yaml
+  - ../../applications/js-gateway/service.yaml
+  - ../../applications/react-frontend/deployment.yaml
+  - ../../applications/react-frontend/service.yaml
+  - ../../applications/auth-service/deployment.yaml
+  - ../../applications/auth-service/service.yaml
+  - ../../applications/csharp-risk-service/deployment.yaml
+  - ../../applications/csharp-risk-service/service.yaml
+  - ../../applications/dotnet-service/deployment.yaml
+  - ../../applications/dotnet-service/service.yaml
+
+images:
+  - name: acrsredevops.azurecr.io/go-service
+    newTag: latest
+  - name: acrsredevops.azurecr.io/python-service
+    newTag: latest
+  - name: acrsredevops.azurecr.io/js-gateway
+    newTag: latest
+  - name: acrsredevops.azurecr.io/react-frontend
+    newTag: latest
+  - name: acrsredevops.azurecr.io/auth-service
+    newTag: latest
+  - name: acrsredevops.azurecr.io/csharp-risk-service
+    newTag: latest
+  - name: acrsredevops.azurecr.io/dotnet-service
+    newTag: latest
+

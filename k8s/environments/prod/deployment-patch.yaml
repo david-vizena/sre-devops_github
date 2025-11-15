@@ -1,0 +1,157 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-service
+  namespace: prod
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+      - name: go-service
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-service
+  namespace: prod
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+      - name: python-service
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: js-gateway
+  namespace: prod
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+      - name: js-gateway
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: react-frontend
+  namespace: prod
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+      - name: react-frontend
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: prod
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+      - name: auth-service
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: csharp-risk-service
+  namespace: prod
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+      - name: csharp-risk-service
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dotnet-service
+  namespace: prod
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+      - name: dotnet-service
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+
