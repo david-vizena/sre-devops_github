@@ -132,9 +132,11 @@ jobs:
         run: |
           # Validate all YAML files except dashboard configmaps (they have large embedded JSON)
           # Dashboard configmaps are validated by kubectl apply --dry-run below
-          find k8s \( -name "*.yaml" -o -name "*.yml" \) | grep -v "dashboard-configmap.yaml" | while read file; do
-            echo "Validating $file with yamllint..."
-            yamllint -c linting/configs/.yamllint.yml "$file" || echo "Warning: $file has yamllint issues (non-critical)"
+          for file in $(find k8s \( -name "*.yaml" -o -name "*.yml" \) | grep -v "dashboard-configmap.yaml"); do
+            if [ -f "$file" ]; then
+              echo "Validating $file with yamllint..."
+              yamllint -c linting/configs/.yamllint.yml "$file" || echo "Warning: $file has yamllint issues (non-critical)"
+            fi
           done
           echo "Skipping dashboard-configmap.yaml (validated by kubectl below)"
 
