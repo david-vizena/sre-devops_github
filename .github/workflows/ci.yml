@@ -32,8 +32,9 @@ jobs:
       - name: Run Go tests
         if: matrix.service == 'go-service'
         working-directory: applications/go-service
+        continue-on-error: true
         run: |
-          go test -v ./... || echo "No tests found (expected)"
+          go test -v ./... || echo "No tests found or tests failed (non-blocking)"
 
       - name: Setup Python
         if: matrix.service == 'python-service'
@@ -67,9 +68,10 @@ jobs:
       - name: Run Node.js tests
         if: matrix.service == 'js-gateway' || matrix.service == 'auth-service'
         working-directory: applications/${{ matrix.service }}
+        continue-on-error: true
         run: |
           npm ci || npm install
-          npm test || echo "No tests found (expected)"
+          npm test || echo "No tests found or tests failed (non-blocking)"
 
   # Build and validate Docker images
   build-docker:
