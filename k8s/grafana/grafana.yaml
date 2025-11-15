@@ -75,6 +75,12 @@ spec:
         - name: grafana-dashboards
           mountPath: /var/lib/grafana/dashboards/analytics-pipeline.json
           subPath: analytics-pipeline.json
+        - name: slo-monitoring-dashboard
+          mountPath: /var/lib/grafana/dashboards/slo-monitoring.json
+          subPath: slo-monitoring.json
+        - name: service-health-dashboard
+          mountPath: /var/lib/grafana/dashboards/service-health.json
+          subPath: service-health.json
         resources:
           requests:
             memory: "256Mi"
@@ -94,6 +100,12 @@ spec:
       - name: grafana-dashboards
         configMap:
           name: portfolio-dashboard
+      - name: slo-monitoring-dashboard
+        configMap:
+          name: slo-monitoring-dashboard
+      - name: service-health-dashboard
+        configMap:
+          name: service-health-dashboard
 ---
 apiVersion: v1
 kind: Service

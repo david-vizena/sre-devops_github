@@ -369,7 +369,7 @@ data:
             },
             "targets": [
                 {
-                    "expr": "service_revenue_total",
+                    "expr": "sum by (service) (http_requests_total) * 100",
                     "legendFormat": "{{service}}",
                     "refId": "A"
                 }
