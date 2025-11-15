@@ -30,7 +30,7 @@ jobs:
       - name: Run ESLint on JS Gateway
         working-directory: applications/js-gateway
         continue-on-error: true
-        run: npm run lint || echo "ESLint found issues (non-blocking)"
+        run: npm run lint 2>&1 || echo "ESLint completed with warnings/errors (non-blocking)"
 
       - name: Install React Frontend dependencies
         working-directory: applications/react-frontend
