@@ -21,8 +21,8 @@ spec:
       imagePullSecrets:
       - name: acr-secret
       containers:
-            - name: react-frontend
-              image: acrsredevops.azurecr.io/react-frontend:latest
+      - name: react-frontend
+        image: acrsredevops.azurecr.io/react-frontend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
@@ -54,4 +54,3 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
-
