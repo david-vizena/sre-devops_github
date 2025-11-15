@@ -10,6 +10,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY main.py .
 COPY worker.py .
+# Copy tracing module if it exists (OpenTelemetry setup)
+COPY tracing.py* .
 
 # Make the script executable
 RUN chmod +x main.py
