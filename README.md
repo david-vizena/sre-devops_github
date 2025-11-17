@@ -130,7 +130,7 @@ Deployment is managed via GitOps using ArgoCD. All infrastructure is provisioned
 │   └── react-frontend/    # React application
 ├── k8s/                   # Kubernetes manifests
 │   ├── applications/      # Service deployments and services
-│   ├── ingress/           # Application ingress configurations
+│   ├── applications/      # Service deployments, services, and ingress
 │   ├── argocd/            # ArgoCD applications
 │   ├── prometheus/        # Prometheus (deployment, service, alert rules, ingress)
 │   ├── grafana/           # Grafana (deployment, service, dashboards, ingress)
