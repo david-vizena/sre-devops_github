@@ -4,18 +4,18 @@
   "description": "React frontend for SRE/DevOps portfolio project",
   "private": true,
   "dependencies": {
+    "axios": "^1.6.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
-    "axios": "^1.6.2"
+    "react-scripts": "5.0.1"
   },
   "devDependencies": {
-    "eslint": "^8.56.0",
-    "eslint-plugin-react": "^7.33.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "tailwindcss": "^3.3.6",
     "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.32"
+    "eslint": "^8.56.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.3.6"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -38,4 +38,3 @@
     ]
   }
 }
-

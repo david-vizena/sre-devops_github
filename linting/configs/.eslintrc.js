@@ -11,8 +11,8 @@ module.exports = {
     ecmaVersion: 2021,
     sourceType: 'module',
   },
-  rules: {
-    'no-console': 'warn',
+        rules: {
+          'no-console': 'off', // Allow console statements for logging
     'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     'no-undef': 'error',
     'semi': ['error', 'always'],
