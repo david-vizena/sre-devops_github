@@ -5,7 +5,7 @@ updates:
     directory: "/applications/js-gateway"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     # Ignore major version updates for packages with breaking changes
     ignore:
       - dependency-name: "express"
@@ -17,7 +17,7 @@ updates:
     directory: "/applications/react-frontend"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     ignore:
       - dependency-name: "react"
         update-types: ["version-update:semver-major"]
@@ -28,7 +28,7 @@ updates:
     directory: "/applications/auth-service"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     ignore:
       - dependency-name: "express"
         update-types: ["version-update:semver-major"]
@@ -40,21 +40,21 @@ updates:
     directory: "/applications/python-service"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
 
   # Enable version updates for Go modules
   - package-ecosystem: "gomod"
     directory: "/applications/go-service"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     # Ignore major version updates for GitHub Actions (often have breaking changes)
     ignore:
       - dependency-name: "actions/checkout"
@@ -89,5 +89,5 @@ updates:
     directory: "/applications/go-service"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
 
