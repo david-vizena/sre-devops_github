@@ -19,7 +19,7 @@ async function authenticateToken(req, res, next) {
   }
 
   // Skip authentication for auth endpoints (they handle their own auth)
-  if (req.path.startsWith('/api/v1/auth/')) {
+  if (req.path.startsWith('/v1/auth/')) {
     return next();
   }
 

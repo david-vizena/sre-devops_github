@@ -5,13 +5,14 @@ metadata:
   namespace: monitoring
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    # Pass through /jaeger path - Jaeger handles base-path internally
+    # Don't rewrite - Jaeger handles /jaeger base-path internally
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
 spec:
   ingressClassName: nginx
   rules:
   - http:
       paths:
-      # Jaeger UI - pass /jaeger/* through to Jaeger (no rewrite, Jaeger knows its base-path)
+      # Jaeger UI - forward /jaeger/* to Jaeger (Jaeger knows its base-path)
       - path: /jaeger
         pathType: Prefix
         backend:

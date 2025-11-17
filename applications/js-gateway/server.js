@@ -15,7 +15,7 @@ const Brakes = require('brakes');
 const cache = require('./lib/cache');
 const messageBus = require('./lib/messageBus');
 const database = require('./lib/database');
-const { authenticateToken } = require('./lib/auth');
+const { authenticateToken, optionalAuth } = require('./lib/auth');
 
 const app = express();
 const PORT = process.env.PORT || 8082;
@@ -273,7 +273,7 @@ app.get('/health', async (req, res) => {
  * Aggregate endpoint - demonstrates API gateway pattern
  * Calls multiple microservices and aggregates responses
  */
-app.get('/api/v1/aggregate', authenticateToken, async (req, res) => {
+app.get('/v1/aggregate', authenticateToken, async (req, res) => {
   try {
     const cacheKey = 'aggregate:v1';
     const { data, cacheHit } = await cache.wrap(cacheKey, async () => {
@@ -313,9 +313,9 @@ app.get('/api/v1/aggregate', authenticateToken, async (req, res) => {
 /**
  * Proxy to Go service
  */
-app.get('/api/v1/go/*', async (req, res) => {
+app.get('/v1/go/*', async (req, res) => {
   try {
-    const path = req.path.replace('/api/v1/go', '');
+    const path = req.path.replace('/v1/go', '');
     const response = await axios.get(`${GO_SERVICE_URL}${path}`);
     res.json(response.data);
   } catch (error) {
@@ -327,9 +327,9 @@ app.get('/api/v1/go/*', async (req, res) => {
   }
 });
 
-app.post('/api/v1/go/*', authenticateToken, async (req, res) => {
+app.post('/v1/go/*', authenticateToken, async (req, res) => {
   try {
-    const path = req.path.replace('/api/v1/go', '');
+    const path = req.path.replace('/v1/go', '');
     const response = await axios.post(`${GO_SERVICE_URL}${path}`, req.body);
     res.json(response.data);
   } catch (error) {
@@ -344,7 +344,7 @@ app.post('/api/v1/go/*', authenticateToken, async (req, res) => {
 /**
  * Transaction lookup endpoint (PostgreSQL + Redis cache)
  */
-app.get('/api/v1/transactions/:id', authenticateToken, async (req, res) => {
+app.get('/v1/transactions/:id', optionalAuth, async (req, res) => {
   const { id } = req.params;
   if (!isValidUuid(id)) {
     return res.status(400).json({ error: 'Invalid transaction ID format' });
@@ -374,9 +374,9 @@ app.get('/api/v1/transactions/:id', authenticateToken, async (req, res) => {
 /**
  * Proxy to Python service
  */
-app.get('/api/v1/python/*', authenticateToken, async (req, res) => {
+app.get('/v1/python/*', authenticateToken, async (req, res) => {
   try {
-    const path = req.path.replace('/api/v1/python', '');
+    const path = req.path.replace('/v1/python', '');
     const response = await axios.get(`${PYTHON_SERVICE_URL}${path}`);
     res.json(response.data);
   } catch (error) {
@@ -388,9 +388,9 @@ app.get('/api/v1/python/*', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/v1/python/*', authenticateToken, async (req, res) => {
+app.post('/v1/python/*', authenticateToken, async (req, res) => {
   try {
-    const path = req.path.replace('/api/v1/python', '');
+    const path = req.path.replace('/v1/python', '');
     const response = await axios.post(`${PYTHON_SERVICE_URL}${path}`, req.body);
     res.json(response.data);
   } catch (error) {
@@ -405,7 +405,7 @@ app.post('/api/v1/python/*', authenticateToken, async (req, res) => {
 /**
  * Transaction processing endpoint - Go service
  */
-app.post('/api/v1/process-transaction', authenticateToken, async (req, res) => {
+app.post('/v1/process-transaction', optionalAuth, async (req, res) => {
   try {
     const response = await axios.post(`${GO_SERVICE_URL}/api/v1/process-transaction`, req.body);
 
@@ -448,7 +448,7 @@ app.post('/api/v1/process-transaction', authenticateToken, async (req, res) => {
 /**
  * Analytics endpoint - Python service
  */
-app.get('/api/v1/analyze', authenticateToken, async (req, res) => {
+app.get('/v1/analyze', optionalAuth, async (req, res) => {
   try {
     const response = await axios.get(`${PYTHON_SERVICE_URL}/api/v1/analyze`);
     res.json(response.data);
@@ -461,7 +461,7 @@ app.get('/api/v1/analyze', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/v1/analyze', authenticateToken, async (req, res) => {
+app.post('/v1/analyze', authenticateToken, async (req, res) => {
   try {
     const response = await axios.post(`${PYTHON_SERVICE_URL}/api/v1/analyze`, req.body);
     res.json(response.data);
@@ -477,7 +477,7 @@ app.post('/api/v1/analyze', authenticateToken, async (req, res) => {
 /**
  * Generate report - Python service
  */
-app.get('/api/v1/report', authenticateToken, async (req, res) => {
+app.get('/v1/report', authenticateToken, async (req, res) => {
   try {
     const response = await axios.get(`${PYTHON_SERVICE_URL}/api/v1/report`);
     res.json(response.data);
@@ -493,7 +493,7 @@ app.get('/api/v1/report', authenticateToken, async (req, res) => {
 /**
  * Risk calculation endpoint - C# Risk service
  */
-app.post('/api/v1/calculate-risk', authenticateToken, async (req, res) => {
+app.post('/v1/calculate-risk', authenticateToken, async (req, res) => {
   try {
     const response = await axios.post(`${CSHARP_RISK_SERVICE_URL}/api/v1/calculate`, req.body);
     res.json(response.data);
@@ -509,9 +509,9 @@ app.post('/api/v1/calculate-risk', authenticateToken, async (req, res) => {
 /**
  * Proxy to C# Risk service
  */
-app.get('/api/v1/csharp-risk/*', authenticateToken, async (req, res) => {
+app.get('/v1/csharp-risk/*', authenticateToken, async (req, res) => {
   try {
-    const path = req.path.replace('/api/v1/csharp-risk', '');
+    const path = req.path.replace('/v1/csharp-risk', '');
     const response = await axios.get(`${CSHARP_RISK_SERVICE_URL}${path}`);
     res.json(response.data);
   } catch (error) {
@@ -523,9 +523,9 @@ app.get('/api/v1/csharp-risk/*', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/v1/csharp-risk/*', authenticateToken, async (req, res) => {
+app.post('/v1/csharp-risk/*', authenticateToken, async (req, res) => {
   try {
-    const path = req.path.replace('/api/v1/csharp-risk', '');
+    const path = req.path.replace('/v1/csharp-risk', '');
     const response = await axios.post(`${CSHARP_RISK_SERVICE_URL}${path}`, req.body);
     res.json(response.data);
   } catch (error) {
@@ -540,7 +540,7 @@ app.post('/api/v1/csharp-risk/*', authenticateToken, async (req, res) => {
 /**
  * Inventory check endpoint - .NET service
  */
-app.post('/api/v1/inventory/check', authenticateToken, async (req, res) => {
+app.post('/v1/inventory/check', authenticateToken, async (req, res) => {
   try {
     const response = await axios.post(`${DOTNET_SERVICE_URL}/api/v1/inventory/check`, req.body);
     res.json(response.data);
@@ -556,9 +556,9 @@ app.post('/api/v1/inventory/check', authenticateToken, async (req, res) => {
 /**
  * Proxy to .NET service
  */
-app.get('/api/v1/dotnet/*', authenticateToken, async (req, res) => {
+app.get('/v1/dotnet/*', authenticateToken, async (req, res) => {
   try {
-    const path = req.path.replace('/api/v1/dotnet', '');
+    const path = req.path.replace('/v1/dotnet', '');
     const response = await axios.get(`${DOTNET_SERVICE_URL}${path}`);
     res.json(response.data);
   } catch (error) {
@@ -570,9 +570,9 @@ app.get('/api/v1/dotnet/*', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/v1/dotnet/*', authenticateToken, async (req, res) => {
+app.post('/v1/dotnet/*', authenticateToken, async (req, res) => {
   try {
-    const path = req.path.replace('/api/v1/dotnet', '');
+    const path = req.path.replace('/v1/dotnet', '');
     const response = await axios.post(`${DOTNET_SERVICE_URL}${path}`, req.body);
     res.json(response.data);
   } catch (error) {
