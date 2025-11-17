@@ -128,12 +128,6 @@ Deployment is managed via GitOps using ArgoCD. All infrastructure is provisioned
 │   ├── js-gateway/        # Express API Gateway
 │   ├── auth-service/      # JWT authentication service
 │   └── react-frontend/    # React application
-├── tests/                 # Testing infrastructure
-│   ├── e2e/               # End-to-end test scripts
-│   └── load/               # Load testing with k6
-├── backup/                # Backup scripts and CronJobs
-├── cost-monitoring/       # Azure cost monitoring scripts
-└── linting/               # Linting configurations
 ├── k8s/                   # Kubernetes manifests
 │   ├── applications/      # Service deployments and services
 │   ├── ingress/           # Application ingress configurations
@@ -148,7 +142,13 @@ Deployment is managed via GitOps using ArgoCD. All infrastructure is provisioned
 │   ├── cert-manager/      # TLS certificate management
 │   ├── network-policies/  # Network security policies
 │   └── environments/      # Multi-environment configs (dev/staging/prod)
-└── docs/                # Documentation
+├── tests/                 # Testing infrastructure
+│   ├── e2e/               # End-to-end test scripts
+│   └── load/              # Load testing with k6
+├── backup/                # Backup scripts and CronJobs
+├── cost-monitoring/       # Azure cost monitoring scripts
+├── linting/               # Linting configurations
+└── docs/                  # Documentation
 ```
 
 ## Features
