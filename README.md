@@ -129,7 +129,6 @@ Deployment is managed via GitOps using ArgoCD. All infrastructure is provisioned
 │   ├── auth-service/      # JWT authentication service
 │   └── react-frontend/    # React application
 ├── k8s/                   # Kubernetes manifests
-│   ├── applications/      # Service deployments and services
 │   ├── applications/      # Service deployments, services, and ingress
 │   ├── argocd/            # ArgoCD applications
 │   ├── prometheus/        # Prometheus (deployment, service, alert rules, ingress)
@@ -148,7 +147,6 @@ Deployment is managed via GitOps using ArgoCD. All infrastructure is provisioned
 ├── backup/                # Backup scripts and CronJobs
 ├── cost-monitoring/       # Azure cost monitoring scripts
 ├── linting/               # Linting configurations
-└── docs/                  # Documentation
 ```
 
 ## Features
