@@ -150,7 +150,7 @@ data:
           },
           "targets": [
             {
-              "expr": "http_request_duration_seconds{quantile=\"0.95\"}",
+              "expr": "avg(http_request_duration_seconds{quantile=\"0.95\"})",
               "legendFormat": "P95 Latency",
               "refId": "A"
             }
