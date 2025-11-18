@@ -67,7 +67,7 @@ data:
           },
           "targets": [
             {
-              "expr": "1 - (sum(rate(http_requests_total{status=~\"5..\"}[5m])) / clamp_min(sum(rate(http_requests_total[5m])), 1))",
+              "expr": "avg(service_up)",
               "legendFormat": "Availability",
               "refId": "A"
             }
@@ -108,7 +108,7 @@ data:
           },
           "targets": [
             {
-              "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) / clamp_min(sum(rate(http_requests_total[5m])), 1)",
+              "expr": "1 - avg(service_up)",
               "legendFormat": "Error Rate",
               "refId": "A"
             }
@@ -150,7 +150,7 @@ data:
           },
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))",
+              "expr": "http_request_duration_seconds{quantile=\"0.95\"}",
               "legendFormat": "P95 Latency",
               "refId": "A"
             }
@@ -191,7 +191,7 @@ data:
           },
           "targets": [
             {
-              "expr": "1 - (sum(rate(http_requests_total{status=~\"5..\"}[5m])) / clamp_min(sum(rate(http_requests_total[5m])), 1))",
+              "expr": "avg(service_up)",
               "legendFormat": "Availability",
               "refId": "A"
             }
@@ -230,17 +230,17 @@ data:
           },
           "targets": [
             {
-              "expr": "histogram_quantile(0.50, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))",
+              "expr": "http_request_duration_seconds{quantile=\"0.5\"}",
               "legendFormat": "P50",
               "refId": "A"
             },
             {
-              "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))",
+              "expr": "http_request_duration_seconds{quantile=\"0.95\"}",
               "legendFormat": "P95",
               "refId": "B"
             },
             {
-              "expr": "histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))",
+              "expr": "http_request_duration_seconds{quantile=\"0.99\"}",
               "legendFormat": "P99",
               "refId": "C"
             }
@@ -279,7 +279,7 @@ data:
           },
           "targets": [
             {
-              "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) / clamp_min(sum(rate(http_requests_total[5m])), 1)",
+              "expr": "1 - avg(service_up)",
               "legendFormat": "Error Rate",
               "refId": "A"
             }
